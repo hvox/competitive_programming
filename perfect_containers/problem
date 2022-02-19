@@ -1,0 +1,5 @@
+Given n things with categories get minimal size of perfect container set.
+Perfect container set:
+	1. All containers have the same size
+	2. Every container is full or almost full with things
+	3. Every container has things only of one category
