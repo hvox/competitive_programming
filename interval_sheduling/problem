@@ -1,0 +1,3 @@
+Given n places where we can work and time, when they are open.
+For every place we know time nedeed to complete one task there.
+We need to shedule our work to maximize number of tasks done.
