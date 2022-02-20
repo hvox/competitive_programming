@@ -1,10 +1,10 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-typedef tuple<int, int, int> workplace;
-const int inf = 1e8;
+typedef tuple<int64_t, int64_t, int64_t> workplace;
+const int64_t inf = 1e18;
 
-int get_maximum_number_of_jobs_done(vector<workplace> places) {
+int64_t get_maximum_number_of_jobs_done(vector<workplace> places) {
 	// future work time intervals (start, dt, end)
 	priority_queue<workplace, vector<workplace>, greater<workplace>> future;
 	future.push({inf * 3, 1, inf * 3});
@@ -13,8 +13,8 @@ int get_maximum_number_of_jobs_done(vector<workplace> places) {
 	// current work time intrevals (dt, start, end)
 	priority_queue<workplace, vector<workplace>, greater<workplace>> current;
 	current.push({inf * 4, -inf * 2, inf * 2});
-	int time = -inf;
-	int jobs_done = 0;
+	int64_t time = -inf;
+	int64_t jobs_done = 0;
 	while (true) {
 		auto [start2, dt2, end2] = future.top();
 		while (start2 <= time) {
@@ -34,14 +34,14 @@ int get_maximum_number_of_jobs_done(vector<workplace> places) {
 			end1 = end;
 			dt1 = dt;
 		}
-		int next_event = min((int)end1, (int)start2);
+		int64_t next_event = min((int64_t)end1, (int64_t)start2);
 		if (time + dt1 <= next_event) {
-			int delta_jobs = (next_event - time) / dt1;
+			int64_t delta_jobs = (next_event - time) / dt1;
 			jobs_done += delta_jobs;
 			time += delta_jobs * dt1;
 			continue;
 		}
-		int best_end = time + dt1;
+		int64_t best_end = time + dt1;
 		while (true) {
 			auto [start, dt, end] = future.top();
 			if (start >= best_end or future.size() == 1) break;
@@ -61,7 +61,7 @@ int main() {
 	while (cin >> n) {
 		vector<workplace> places(n);
 		for (int i = 0; i < n; i++) {
-			int start, end, job_time;
+			int64_t start, end, job_time;
 			cin >> start >> end >> job_time;
 			places[i] = {start, end, job_time};
 		}
