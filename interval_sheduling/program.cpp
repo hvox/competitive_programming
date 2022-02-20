@@ -58,13 +58,17 @@ int64_t get_maximum_number_of_jobs_done(vector<workplace> places) {
 
 int main() {
 	int n;
+	cout << "Number of places: ";
 	while (cin >> n) {
 		vector<workplace> places(n);
+		cout << "Places(start, end, time for one job)" << endl;
 		for (int i = 0; i < n; i++) {
 			int64_t start, end, job_time;
 			cin >> start >> end >> job_time;
 			places[i] = {start, end, job_time};
 		}
-		cout << get_maximum_number_of_jobs_done(places) << endl;
+		int64_t jobs = get_maximum_number_of_jobs_done(places);
+		cout << "Maximum number of jobs we can get done: ";
+		cout << jobs << endl;
 	}
 }
