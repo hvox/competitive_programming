@@ -1,0 +1,4 @@
+For every sequence of positive integer numbers [1, 2, 3] and N
+there are many ways to put platforms of sizes 1, 2, 3 at the line of
+length N without them touching each other.
+Given bit mask of always filled cells, determine sequence.
