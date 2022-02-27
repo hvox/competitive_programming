@@ -1,0 +1,4 @@
+There was an bipartite tree.
+We got prufer code of it, separated it into two subcodes for every part.
+Then we deleted some of the numbers.
+Now we should try to restore the tree.
