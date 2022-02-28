@@ -20,7 +20,7 @@ def dp(prices, n, x):
 
     # tactic: USE CASINO UNTIL WIN
     avg_price = 0
-    casino_price = (1 + Fraction(1, 2) * (n - len(prices)) / len(prices)) * x
+    casino_price = (1 + Fraction(n) / len(prices)) * x / 2
     for i in range(len(prices)):
         prices2 = prices[:i] + prices[i + 1 : ]
         avg_price += (dp(prices2, n, x)[0] + casino_price) / len(prices)
