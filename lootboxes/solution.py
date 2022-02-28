@@ -32,7 +32,7 @@ def get_tactic(prices, x=1, n = None):
     n = n if n is not None else len(prices)
     return dp(prices, n, Fraction(x))
 
-prices = map(Fraction, input("Input prices of things: ").split())
+prices = list(map(Fraction, input("Input prices of things: ").split()))
 casino_price = Fraction(input("Input price of lootbox: "))
 price, tactic = get_tactic(prices, casino_price)
 print(f"We should use tactic: {tactic}")
