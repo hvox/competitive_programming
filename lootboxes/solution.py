@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from functools import cache
 from math import inf
 from fractions import Fraction
@@ -51,6 +53,7 @@ def execute_tactic(prices, casino_price, n=None):
     return execute_tactic(prices, casino_price, n)
 
 
-prices = list(map(Fraction, input("Input prices of things: ").split()))
-casino_price = Fraction(input("Input price of lootbox: "))
-execute_tactic(prices, casino_price)
+if __name__ == "__main__":
+    prices = list(map(Fraction, input("Input prices of things: ").split()))
+    casino_price = Fraction(input("Input price of lootbox: "))
+    execute_tactic(prices, casino_price)
