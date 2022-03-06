@@ -35,8 +35,22 @@ def get_tactic(prices, x=1, n=None):
     return dp(prices, n, Fraction(x))
 
 
+def execute_tactic(prices, casino_price, n=None):
+    if not prices:
+        print("success")
+        return
+    n = n or len(prices)
+    price, tactic = get_tactic(prices, casino_price, n)
+    print(list(map(int, prices)))
+    print(f"We should use tactic: {tactic}")
+    print(f"Total price: {price} or {float(price)}")
+    if tactic == "buy":
+        prices.pop(0)
+    else:
+        prices.pop(-1)
+    return execute_tactic(prices, casino_price, n)
+
+
 prices = list(map(Fraction, input("Input prices of things: ").split()))
 casino_price = Fraction(input("Input price of lootbox: "))
-price, tactic = get_tactic(prices, casino_price)
-print(f"We should use tactic: {tactic}")
-print(f"Total price: {price} or {float(price)}")
+execute_tactic(prices, casino_price)
