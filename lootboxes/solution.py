@@ -3,6 +3,7 @@
 from functools import cache
 from math import inf
 from fractions import Fraction
+from collections import defaultdict
 
 
 @cache
@@ -31,10 +32,46 @@ def dp(prices, n, x):
     return best_tactic
 
 
+@cache
+def number_of_combinations(k, n):
+    result = Fraction(1)
+    for f in range(k + 1, n + 1):
+        result *= f
+    for f in range(1, n - k + 1):
+        result /= f
+    return result
+
+
+def count_sums_of_subsets(elements):
+    subsets = defaultdict(int)
+    subsets[0, 0] = 1
+    for x in elements:
+        for (sum, size), count in list(subsets.items()):
+            subsets[sum + x, size + 1] += count
+    return dict(subsets)
+
+
+def fast_count(prices, lootbox_price, n=None):
+    n = n or len(prices)
+    assert min(prices) >= lootbox_price
+    result = 0
+    sum_prices = sum(prices)
+    subsets = count_sums_of_subsets(prices)
+    for (price, size), combinations in subsets.items():
+        if size == len(prices):
+            continue
+        casino_price = (1 + Fraction(n) / (n - size)) * lootbox_price / 2
+        buy_price = Fraction(sum_prices - price) / (n - size)
+        price = min(buy_price, casino_price)
+        probability = Fraction(combinations) / number_of_combinations(size, n)
+        result += probability * price
+    return result
+
+
 def get_tactic(prices, x=1, n=None):
     prices = tuple(sorted(Fraction(p) for p in prices))
     n = n if n is not None else len(prices)
-    return dp(prices, n, Fraction(x))
+    return dp(prices, n, x) if min(prices) < x else fast_count(prices, x)
 
 
 def execute_tactic(prices, casino_price, n=None):
@@ -56,4 +93,4 @@ def execute_tactic(prices, casino_price, n=None):
 if __name__ == "__main__":
     prices = list(map(Fraction, input("Input prices of things: ").split()))
     casino_price = Fraction(input("Input price of lootbox: "))
-    execute_tactic(prices, casino_price)
+    print(get_tactic(prices, casino_price))
