@@ -20,8 +20,10 @@ vector<int> get_top_half(int n) {
 		for (int i = 0; i < 6; i+=2)
 			order(i, i+1);
 		if (order(0, 2)) swap(A[1], A[3]);
+		if (order(0, 4)) swap(A[1], A[5]);
 		if (order(2, 4)) swap(A[3], A[5]);
 		order(1, 3);
+		order(1, 4);
 		vector<int> top_half(3);
 		for (int i = 0; i < 3; i++)
 			top_half[i] = A[i + 3];
@@ -46,6 +48,13 @@ vector<int> get_top_half(int n) {
 		return false;
 	};
 
+	auto ask = [&](int i, int j){
+		cout << "? " << i << " " << j << endl;
+		string answer;
+		cin >> answer;
+		return (answer == "<");
+	};
+
 	auto get_minimum = [&](vector<int> &A) -> int {
 		for(int i = 0; i < A.size() / 2; i++)
 			order_elements(A, i + (A.size() + 1) / 2, i);
@@ -66,7 +75,9 @@ vector<int> get_top_half(int n) {
 	get_minimum(right);
 
 	for (int t = 0; t < n / 2; t++) {
-		if (left[left.size() - 1] < right[right.size() - 1]) {
+		int l_top = left[left.size() - 1];
+		int r_top = right[right.size() - 1];
+		if (ask(l_top, r_top)) {
 			left.pop_back();
 			if (not left_is_sorted) {
 				interactive_sort(left);
