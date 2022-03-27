@@ -10,7 +10,6 @@ def count_subpermutationfree_permutations(n):
     def is_subpermutationfree_permutation(perm):
         n = len(perm)
         for start in range(n):
-            #for size in range(2, min(n - start, n - 1)):
             for end in range(start + 2, n + 1):
                 if end - start == n:
                     continue
@@ -21,6 +20,9 @@ def count_subpermutationfree_permutations(n):
 
 
 if __name__ == "__main__":
-    from solution import nonsp_perms_fixed
-    for n in range(10):
-        print(n, "->", nonsp_perms_fixed(n), count_subpermutationfree_permutations(n))
+    from solution import nonsp_perms
+    for n in range(20):
+        y1 = nonsp_perms(n)
+        y2 = count_subpermutationfree_permutations(n)
+        ps = factorial(n)
+        print(f"{n:2}! = {ps:<11}=>{y1:>10} ~ {y2:<10}")

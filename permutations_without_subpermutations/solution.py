@@ -31,24 +31,15 @@ def intervals(k, n):
 
 
 @cache
-# number of permutations without subpermutations
-def nonsp_perms(n):
-    return factorial(n) - sum(
-        intervals(k, n) * nonsp_perms(k) for k in range(2, n)
-    )
+# number of permutations with subpermutations
+def perms_with_subs(n):
     # number of permutations with exactly two subpermutations
     s2 = sum(factorial(n - k) * nonprefixed(k) for k in range(1, n)) * 2
-    # number of permutations with many subpermutations
+    # number of permutations with more than three subpermutations
     s3 = sum(intervals(k, n) * nonsp_perms(k) for k in range(3, n))
-    # print("nonsp_perms", n, "->", factorial(n) - s2 - s3)
-    return factorial(n) - s2 - s3
+    return s2 * (n > 2) + s3
 
-
-def nonsp_perms_fixed(n):
-    y = nonsp_perms(n)
-    if n >= 3:
-        if n % 2:
-            y += 2
-        else:
-            y -= 2
-    return y
+@cache
+# number of permutations without subpermutations
+def nonsp_perms(n):
+    return factorial(n) - perms_with_subs(n)
