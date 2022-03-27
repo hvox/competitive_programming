@@ -1,1 +1,2 @@
 given number n, find simple fractions p and q so p + q + 1 / n = 1
+by the way denominators of p and q must be factors of n
