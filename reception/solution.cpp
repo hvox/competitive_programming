@@ -27,7 +27,7 @@ void set_value(vector<elemT> &tree, int i, elemT value) {
 elemT accumulate(vector<elemT> &tree, int L, int R) {
 	if (L == R) return tree[L];
 	if (L % 2 != 0) return f(tree[L], accumulate(tree, L + 1, R));
-	if (R % 2) return f(accumulate(tree, L, R - 1), tree[R]);
+	if (R % 2 == 0) return f(accumulate(tree, L, R - 1), tree[R]);
 	return accumulate(tree, L / 2, R / 2);
 }
 
