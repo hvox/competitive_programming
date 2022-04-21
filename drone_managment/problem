@@ -1,0 +1,4 @@
+Given N drones and M packages to deliver, deliver
+maximum number of packages in 12 hours.
+Drone speed: 100 m/s.
+Unloading time: 30 minutes.
