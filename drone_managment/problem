@@ -1,4 +1,6 @@
+----- NERC QUEST 2022-04-12 -----
 Given N drones and M packages to deliver, deliver
 maximum number of packages in 12 hours.
+Package destinations are given as 2d coordinates.
 Drone speed: 100 m/s.
 Unloading time: 30 minutes.
