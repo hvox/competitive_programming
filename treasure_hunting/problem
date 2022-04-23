@@ -1,0 +1,3 @@
+find two treasures on grid using these commands:
+scan(x,y) -> sum of Manhattan distances to the treasures
+dig(x,y) -> try to dig treasure at (x,y)
