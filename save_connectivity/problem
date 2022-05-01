@@ -1,0 +1,2 @@
+given a fully connected orgraph of n vertices and m edges.
+Delete m-2*n edges. But the graph must still be connected
