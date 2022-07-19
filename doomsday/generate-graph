@@ -1,0 +1,30 @@
+#!/bin/env python3
+import random
+import sys
+
+def random_colors(u, m):
+    colors = {v for v in range(u, m + 1) if random.randint(0, 1)}
+    return [len(colors)] + list(colors)
+
+n, m, q = map(int, sys.argv[1:])
+print(n, m, q)
+assert n * (n - 1) / 2 >= m >= n - 1 and n >= 2
+
+edges = set()
+for u in range(1, n):
+    v = u + 1
+    print(u, v, random.randint(1, 200), *random_colors(max(u, u-2), min(u, u+2)))
+    edges.add((u, v))
+    edges.add((v, u))
+
+for i in range(n - 1, m):
+    u, v = [random.randint(1, n) for _ in range(2)]
+    while (u, v) in edges:
+        u, v = [random.randint(1, n) for _ in range(2)]
+    print(u, v, random.randint(1, 200), *random_colors(i, i))
+
+for _ in range(q):
+    u, v = [random.randint(1, n) for _ in range(2)]
+    while v == u:
+        v = random.randint(1, n)
+    print(u, v)
