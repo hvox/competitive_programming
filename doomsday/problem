@@ -1,0 +1,23 @@
+Build pairs of routes with minimized number of common shared risk link groups in
+a communication network.
+
+While constructing an optical communication network, it may turn out that
+several optical cables are simultaneously exposed to some hazard:
+for example, they run in the same tunnel and will be disconnected at the same
+time if the tunnel is flooded. In such cases, we say that the set of these
+cables has a shared risk link group (SRLG), and a specific number (a color) is
+assigned to the hazard factor.
+
+We can think of a communication network as a connected, undirected, weighted
+simple graph $G$. The vertices of this graph are transmitters which can exchange
+signals with each other along undirected edges which represent optical cables.
+The communication network has the following property: for each shared risk link
+group, all cables of the group lie close enough to a certain cable of the
+network. Below we will describe the problem statement in more detail.
+
+For each cable in the network, its length and a set of risks of no more than 16
+numbers are known. For several pairs $(s, t)$, it is necessary to deliver the
+signal from the source $s$ to the receiver $t$. To do so, one has to build a
+pair of main and backup routes with the least number of common shared risks, and
+among all such pairs, a pair with the smallest possible sum of lengths of the
+routes is preferred.
