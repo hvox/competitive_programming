@@ -70,11 +70,15 @@ def solutions_imperfections(graph, queris, solutions):
 _, input_path, output_path = map(Path, sys.argv)
 inp = input_path.read_text().strip().split("\n")
 graph, queris = parse_input(input_path.read_text())
-print(queris)
 solutions = parse_output(len(queris), output_path.read_text())
-print(solutions)
+for q, s in zip(queris, solutions):
+    print("", *q, "->", *s)
+
+total = 0
 print(" --- scores --- ")
 for query, imperfection in zip(
     queris, solutions_imperfections(graph, queris, solutions)
 ):
     print(query, imperfection)
+    total += imperfection
+print("TOTAL: ", total)
