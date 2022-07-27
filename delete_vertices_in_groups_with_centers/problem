@@ -1,0 +1,30 @@
+Delete all the vertices of the graph in groups of a vertex
+and at least one of its neighboard.
+Find minimal number of required deletions.
+
+INPUT
+number_of_vertices, number_of_edges
+u[1], v[1] -- edges
+...
+u[m], v[m]
+
+OUTPUT
+number_of_deletions
+[ ...
+  number_of_vertices_in_ith_deletion
+  vertices_in_the_deletion # first vertex is the center
+  ... ]
+
+EXAMPLE
+5 5
+3 4
+4 5
+1 2
+2 3
+3 1
+-->
+2
+2
+2 1
+3
+4 3 5
