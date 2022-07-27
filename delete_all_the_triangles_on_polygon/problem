@@ -11,3 +11,9 @@ u[n-3] v[n-3]
 
 OUTPUT
 Mimum number of edges we should delete in order to destroy all the triangles
+
+EXAMPLE
+6        ->  3
+2 4
+2 6
+4 6
