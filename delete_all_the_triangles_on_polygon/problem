@@ -1,0 +1,13 @@
+There is a polygon. And some of the vertices are connected so that the
+polygon is divised into triangles.
+Find minimal number of edges to delete in order to destroy all the triangles
+
+INPUT
+number_of_vertices_in_the_polygon
+u[1] v[1] -- additional edges to form a triangle
+u[2] v[2]
+...
+u[n-3] v[n-3]
+
+OUTPUT
+Mimum number of edges we should delete in order to destroy all the triangles
