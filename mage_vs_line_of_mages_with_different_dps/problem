@@ -1,0 +1,14 @@
+There is a fight between one guy, who can oneshot everyone on specified range,
+and a bunch of other guy, who just do damage.
+The task is to calculate minimum taken damage of the first guy.
+
+INPUT
+number_of_mages, number_of_fight_rounds
+d1, d2, d3..dn -- the damage done by dudes from the line on each round
+l1, r1 -- range on the line subrange of which can be killed
+l2, r2    on corresponding round
+...
+lm, rm
+
+OUTPUT
+Mimum required health of onepunchman to stay alive during all the rounds
