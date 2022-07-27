@@ -1,0 +1,27 @@
+# statement
+Compress image by shrinking rectangles on it
+
+# input
+height, width
+[ the_image ]
+
+# output
+new_height, new_width
+[ compressed_image ]
+
+# example
+9 12
+........XXXX
+........XXXX
+........XXXX
+XXXXXXXXXXXX
+XXXXXXXXXXXX
+XXXXXXXXXXXX
+XXXX....XXXX
+XXXX....XXXX
+XXXX....XXXX
+-->
+3 3
+..X
+XXX
+X.X
