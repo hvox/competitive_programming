@@ -1,0 +1,27 @@
+# statement
+There is a graph.
+Find shortest path between vertices 1 and n, where length of path =
+	Σ_(uv in new edges) (u-v)^2
+
+# input
+T -- number of tests
+number_of_vertices, number_of_edges
+u1 v1 -- edge1
+u2 v2
+...
+
+# output
+length_of_the_path
+
+# example
+2
+5 2
+1 2
+4 5
+5 3
+1 2
+2 3
+4 5
+-->
+2
+1
