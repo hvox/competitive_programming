@@ -1,0 +1,22 @@
+# statement
+Player A is stronger than player B if P(stat_A > stat_B) > P(stat_B > stat_A)
+Check if there is such player C that A>B>C>A or something like that
+
+# input
+T -- number of tests
+A1 A2 A3 A4 B1 B2 B3 B4 -- for test 1
+A1 A2 A3 A4 B1 B2 B3 B4 -- for test 2
+...
+
+# output
+length_of_the_path
+
+# example
+3
+4 5 6 7 2 4 5 10
+2 2 2 2 1 1 1 1
+1 1 1 1 2 2 2 2
+-->
+yes
+no
+no
