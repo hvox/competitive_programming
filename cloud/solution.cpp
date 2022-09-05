@@ -64,7 +64,6 @@ void reallocate_vms(int next_time_point) {
       }
       if (vm_index == -1)
         continue;
-      auto &vm = VMS[vm_index];
       steps[i]++;
       steps[j]++;
       reallocations.push_back(move_vm(vm_index, i, j));
