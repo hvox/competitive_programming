@@ -1,4 +1,4 @@
-// Score: 164_878
+// Score: 97_687
 // TLE: 2, 4
 
 #include <iostream>
@@ -7,21 +7,21 @@
 #include <vector>
 
 #define DEBUG false
+const int CPU_LIMIT = 300000;
 
 struct Server {
   int16_t total_cpu;
-  int16_t total_ram;
+  int16_t free_cpu;
+  int16_t free_ram;
   std::set<int> vms;
   int cpu_usage;
-  int free_cpu;
-  int free_ram;
-  int penalties = 0;
+  int16_t penalties = 0;
 };
 
 struct VirtualServer {
   int16_t cpu;
   int16_t ram;
-  int16_t cpu_usage;
+  int cpu_usage;
 };
 
 int NUMBER_OF_SERVERS, NUMBER_OF_VMS, NUMBER_OF_TIME_POINTS;
@@ -47,16 +47,16 @@ void reallocate_vms(int next_time_point) {
   std::vector<std::pair<int, int>> reallocations;
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
     auto &u = SERVERS[i];
-    if (u.cpu_usage * 10 <= u.total_cpu * 3 || steps[i] == 2)
+    if (u.cpu_usage <= u.total_cpu * CPU_LIMIT || steps[i] == 2)
       continue;
     for (int j = 0; j < NUMBER_OF_SERVERS; j++) {
       auto &v = SERVERS[j];
-      if (i == j || steps[j] == 2 || v.cpu_usage * 10 > v.total_cpu * 3)
+      if (i == j || steps[j] == 2 || v.cpu_usage > v.total_cpu * CPU_LIMIT)
         continue;
       int vm_index = -1;
       for (int i : u.vms) {
         auto &vm = VMS[i];
-        if ((v.cpu_usage + vm.cpu_usage) * 10 <= v.total_cpu * 3 &&
+        if ((v.cpu_usage + vm.cpu_usage) <= v.total_cpu * CPU_LIMIT &&
             v.free_cpu >= vm.cpu && v.free_ram >= vm.ram) {
           vm_index = i;
           break;
@@ -81,8 +81,7 @@ void update_statistics() {
   for (int i = 0; i < NUMBER_OF_VMS; i++) {
     int cpu_usage;
     std::cin >> cpu_usage;
-    cpu_usage = (cpu_usage * VMS[i].cpu + 999999) / 1000000;
-    VMS[i].cpu_usage = cpu_usage;
+    VMS[i].cpu_usage = cpu_usage * VMS[i].cpu;
   }
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
     auto &srv = SERVERS[i];
@@ -91,18 +90,11 @@ void update_statistics() {
       cpu_usage += VMS[vm].cpu_usage;
     srv.cpu_usage = cpu_usage;
     if (DEBUG)
-      std::cout << "Server #" << i << " cpu_usage: " << cpu_usage << " / "
-                << srv.total_cpu << std::endl;
-    if (srv.cpu_usage * 10 > srv.total_cpu * 3)
-      ++srv.penalties;
-  }
-}
-
-void update_total_penalty() {
-  for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
-    auto &srv = SERVERS[i];
-    if (srv.cpu_usage * 10 > srv.total_cpu * 3)
-      TOTAL_PENALTY += pow(2.0, srv.penalties - 1) * srv.vms.size();
+      std::cout << "Server #" << i << " cpu_usage: " << cpu_usage / 1000000
+                << " / " << srv.total_cpu << std::endl;
+    if (srv.cpu_usage > srv.total_cpu * CPU_LIMIT) {
+      TOTAL_PENALTY += pow(2.0, srv.penalties++) * srv.vms.size();
+    }
   }
   if (DEBUG)
     std::cout << "Total penalty: " << TOTAL_PENALTY << std::endl;
@@ -111,9 +103,8 @@ void update_total_penalty() {
 int main() {
   std::cin >> NUMBER_OF_SERVERS >> NUMBER_OF_VMS >> NUMBER_OF_TIME_POINTS;
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
-    std::cin >> SERVERS[i].total_cpu >> SERVERS[i].total_ram;
-    SERVERS[i].free_cpu = SERVERS[i].total_cpu;
-    SERVERS[i].free_ram = SERVERS[i].total_ram;
+    std::cin >> SERVERS[i].free_cpu >> SERVERS[i].free_ram;
+    SERVERS[i].total_cpu = SERVERS[i].free_cpu;
   }
   for (int i = 0; i < NUMBER_OF_VMS; i++)
     std::cin >> VMS[i].cpu >> VMS[i].ram;
@@ -125,10 +116,8 @@ int main() {
     SERVERS[parent - 1].free_ram -= VMS[i].ram;
   }
   update_statistics();
-  update_total_penalty();
   for (int time = 1; time < NUMBER_OF_TIME_POINTS; time++) {
     reallocate_vms(time);
     update_statistics();
-    update_total_penalty();
   }
 }
