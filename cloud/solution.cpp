@@ -10,6 +10,7 @@ struct Server {
   int16_t total_cpu;
   int16_t total_ram;
   std::set<int> vms;
+  int cpu_usage;
   int penalties = 0;
 };
 
@@ -25,16 +26,26 @@ Server SERVERS[100];
 VirtualServer VMS[10000];
 
 void reallocate_vms(int next_time_point) {
-  // I don't have solution yet
+  // I still don't have solution yet
   std::cout << 0 << std::endl;
 }
+
 void update_statistics() {
+  for (int i = 0; i < NUMBER_OF_VMS; i++)
+    std::cin >> VMS[i].cpu_usage;
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
     auto &srv = SERVERS[i];
     int cpu_usage = 0;
     for (auto &vm : srv.vms)
       cpu_usage += VMS[vm].cpu_usage;
-    if (cpu_usage * 10 > srv.total_cpu * 3)
+    srv.cpu_usage = cpu_usage;
+  }
+}
+
+void update_total_penalty() {
+  for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
+    auto &srv = SERVERS[i];
+    if (srv.cpu_usage * 10 > srv.total_cpu * 3)
       TOTAL_PENALTY += pow(2.0, srv.penalties++) * srv.vms.size();
   }
 }
@@ -50,13 +61,11 @@ int main() {
     std::cin >> parent;
     SERVERS[parent - 1].vms.insert(i);
   }
-  for (int i = 0; i < NUMBER_OF_VMS; i++)
-    std::cin >> VMS[i].cpu_usage;
+  update_statistics();
   for (int time = 1; time < NUMBER_OF_TIME_POINTS; time++) {
     reallocate_vms(time);
-    for (int i = 0; i < NUMBER_OF_VMS; i++)
-      std::cin >> VMS[i].cpu_usage;
     update_statistics();
+    update_total_penalty();
   }
   if (DEBUG)
     std::cout << "Total penalty: " << TOTAL_PENALTY << std::endl;
