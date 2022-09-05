@@ -34,6 +34,7 @@ inline std::pair<int, int> move_vm(int vm, int source, int destination) {
   SERVERS[source].free_ram += VMS[vm].ram;
   SERVERS[source].cpu_usage -= VMS[vm].cpu_usage;
   SERVERS[source].vms.erase(vm);
+  TOTAL_PENALTY += VMS[vm].ram;
   SERVERS[destination].free_cpu -= VMS[vm].cpu;
   SERVERS[destination].free_ram -= VMS[vm].ram;
   SERVERS[destination].cpu_usage += VMS[vm].cpu_usage;
