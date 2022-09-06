@@ -1,4 +1,4 @@
-// Score: 97_687
+// Score: 88_182
 // TLE: 2, 4
 
 #include <iostream>
@@ -8,7 +8,6 @@
 
 #define DEBUG false
 const int CPU_LIMIT = 300000;
-const int PENALTY_TIME_LIMIT = 16;
 
 struct Server {
   int16_t total_cpu;
@@ -44,6 +43,10 @@ inline std::pair<int, int> move_vm(int vm, int source, int destination) {
 }
 
 void reallocate_vms(int next_time_point) {
+  if (TOTAL_PENALTY > 1e19) {
+    std::cout << 0 << std::endl;
+    return;
+  }
   int steps[100] = {};
   bool moved[10000] = {};
   std::vector<std::pair<int, int>> reallocations;
@@ -60,7 +63,8 @@ void reallocate_vms(int next_time_point) {
       if (DEBUG)
         std::cout << "\tinto server#" << j << std::endl;
       if (v.cpu_usage > v.total_cpu * CPU_LIMIT &&
-          u.penalties - v.penalties < PENALTY_TIME_LIMIT)
+          (1 << u.penalties) * (u.vms.size()) <
+              (1 << v.penalties) * (v.vms.size() + 1) + 512)
         continue;
       int vm_index = -1;
       for (int i : u.vms) {
@@ -68,7 +72,8 @@ void reallocate_vms(int next_time_point) {
           continue;
         auto &vm = VMS[i];
         if (((v.cpu_usage + vm.cpu_usage) <= v.total_cpu * CPU_LIMIT ||
-             u.penalties - v.penalties >= PENALTY_TIME_LIMIT) &&
+             (1 << u.penalties) * (u.vms.size()) >
+                 vm.ram + (1 << v.penalties) * (v.vms.size() + 1)) &&
             v.free_cpu >= vm.cpu && v.free_ram >= vm.ram) {
           vm_index = i;
           break;
