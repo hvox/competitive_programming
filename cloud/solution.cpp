@@ -62,10 +62,6 @@ void reallocate_vms(int next_time_point) {
         continue;
       if (DEBUG)
         std::cout << "\tinto server#" << j << std::endl;
-      if (v.cpu_usage > v.total_cpu * CPU_LIMIT &&
-          (1 << u.penalties) * (u.vms.size()) <
-              (1 << v.penalties) * (v.vms.size() + 1) + 512)
-        continue;
       int vm_index = -1;
       for (int i : u.vms) {
         if (moved[i])
