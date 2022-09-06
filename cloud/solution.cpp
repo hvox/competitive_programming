@@ -1,6 +1,7 @@
-// Score: 143_921
+// Score: 100_788
 // TLE: 2, 4
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <set>
@@ -24,12 +25,14 @@ struct VirtualServer {
   int16_t cpu;
   int16_t ram;
   int8_t home;
+  int16_t id;
 };
 
 int NUMBER_OF_SERVERS, NUMBER_OF_VMS, NUMBER_OF_TIME_POINTS;
 long double TOTAL_PENALTY = 0;
 Server SERVERS[100];
 VirtualServer VMS[10000];
+int16_t VMS_OFFSETS[10000];
 
 inline std::pair<int, int> move_vm(int vm, int destination) {
   int source = VMS[vm].home;
@@ -43,7 +46,7 @@ inline std::pair<int, int> move_vm(int vm, int destination) {
   SERVERS[destination].cpu_usage += VMS[vm].cpu_usage;
   SERVERS[destination].total_vms++;
   TOTAL_PENALTY += VMS[vm].ram;
-  return {vm + 1, destination + 1};
+  return {VMS[vm].id + 1, destination + 1};
 }
 
 void reallocate_vms(int next_time_point) {
@@ -92,7 +95,8 @@ void reallocate_vms(int next_time_point) {
 }
 
 void update_statistics() {
-  for (int i = 0; i < NUMBER_OF_VMS; i++) {
+  for (int j = 0; j < NUMBER_OF_VMS; j++) {
+    int i = VMS_OFFSETS[j];
     int cpu_usage;
     std::cin >> cpu_usage;
     cpu_usage *= VMS[i].cpu;
@@ -115,6 +119,7 @@ void update_statistics() {
     std::cout << "Total penalty: " << TOTAL_PENALTY << std::endl;
 }
 
+bool cmp(VirtualServer &a, VirtualServer &b) { return a.ram <= b.ram; }
 int main() {
   std::cin >> NUMBER_OF_SERVERS >> NUMBER_OF_VMS >> NUMBER_OF_TIME_POINTS;
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
@@ -126,11 +131,15 @@ int main() {
   for (int i = 0; i < NUMBER_OF_VMS; i++) {
     int parent;
     std::cin >> parent;
+    VMS[i].id = i;
     VMS[i].home = --parent;
     SERVERS[parent].free_cpu -= VMS[i].cpu;
     SERVERS[parent].free_ram -= VMS[i].ram;
     SERVERS[parent].total_vms++;
   }
+  std::sort(VMS, VMS + NUMBER_OF_VMS, cmp);
+  for (int i = 0; i < NUMBER_OF_VMS; i++)
+    VMS_OFFSETS[VMS[i].id] = i;
   update_statistics();
   for (int time = 1; time < NUMBER_OF_TIME_POINTS; time++) {
     reallocate_vms(time);
