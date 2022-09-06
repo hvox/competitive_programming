@@ -1,4 +1,4 @@
-// Score: 97_687
+// Score: 88_182
 // TLE: 2, 4
 
 #include <iostream>
@@ -44,19 +44,30 @@ inline std::pair<int, int> move_vm(int vm, int source, int destination) {
 
 void reallocate_vms(int next_time_point) {
   int steps[100] = {};
+  bool moved[10000] = {};
   std::vector<std::pair<int, int>> reallocations;
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
     auto &u = SERVERS[i];
     if (u.cpu_usage <= u.total_cpu * CPU_LIMIT || steps[i] == 2)
       continue;
+    if (DEBUG)
+      std::cout << "Let's move vms from server#" << i << std::endl;
     for (int j = 0; j < NUMBER_OF_SERVERS; j++) {
       auto &v = SERVERS[j];
-      if (i == j || steps[j] == 2 || v.cpu_usage > v.total_cpu * CPU_LIMIT)
+      if (i == j || steps[j] == 2)
+        continue;
+      if (DEBUG)
+        std::cout << "\tinto server#" << j << std::endl;
+      if (v.cpu_usage > v.total_cpu * CPU_LIMIT &&
+          u.penalties - v.penalties < 2)
         continue;
       int vm_index = -1;
       for (int i : u.vms) {
+        if (moved[i])
+          continue;
         auto &vm = VMS[i];
-        if ((v.cpu_usage + vm.cpu_usage) <= v.total_cpu * CPU_LIMIT &&
+        if (((v.cpu_usage + vm.cpu_usage) <= v.total_cpu * CPU_LIMIT ||
+             u.penalties - v.penalties >= 2) &&
             v.free_cpu >= vm.cpu && v.free_ram >= vm.ram) {
           vm_index = i;
           break;
@@ -66,6 +77,7 @@ void reallocate_vms(int next_time_point) {
         continue;
       steps[i]++;
       steps[j]++;
+      moved[vm_index] = true;
       reallocations.push_back(move_vm(vm_index, i, j));
       break;
     }
@@ -88,12 +100,13 @@ void update_statistics() {
     for (auto &vm : srv.vms)
       cpu_usage += VMS[vm].cpu_usage;
     srv.cpu_usage = cpu_usage;
-    if (DEBUG)
-      std::cout << "Server #" << i << " cpu_usage: " << cpu_usage / 1000000
-                << " / " << srv.total_cpu << std::endl;
     if (srv.cpu_usage > srv.total_cpu * CPU_LIMIT) {
       TOTAL_PENALTY += pow(2.0, srv.penalties++) * srv.vms.size();
     }
+    if (DEBUG)
+      std::cout << "Server #" << i << " penalties: " << srv.penalties
+                << " cpu_usage: " << cpu_usage / 1000000 << " / "
+                << srv.total_cpu << std::endl;
   }
   if (DEBUG)
     std::cout << "Total penalty: " << TOTAL_PENALTY << std::endl;
