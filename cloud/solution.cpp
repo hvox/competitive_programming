@@ -1,4 +1,4 @@
-// Score: 88_182
+// Score: 97_687
 // TLE: 2, 4
 
 #include <iostream>
@@ -8,6 +8,7 @@
 
 #define DEBUG false
 const int CPU_LIMIT = 300000;
+const int PENALTY_TIME_LIMIT = 16;
 
 struct Server {
   int16_t total_cpu;
@@ -59,7 +60,7 @@ void reallocate_vms(int next_time_point) {
       if (DEBUG)
         std::cout << "\tinto server#" << j << std::endl;
       if (v.cpu_usage > v.total_cpu * CPU_LIMIT &&
-          u.penalties - v.penalties < 2)
+          u.penalties - v.penalties < PENALTY_TIME_LIMIT)
         continue;
       int vm_index = -1;
       for (int i : u.vms) {
@@ -67,7 +68,7 @@ void reallocate_vms(int next_time_point) {
           continue;
         auto &vm = VMS[i];
         if (((v.cpu_usage + vm.cpu_usage) <= v.total_cpu * CPU_LIMIT ||
-             u.penalties - v.penalties >= 2) &&
+             u.penalties - v.penalties >= PENALTY_TIME_LIMIT) &&
             v.free_cpu >= vm.cpu && v.free_ram >= vm.ram) {
           vm_index = i;
           break;
