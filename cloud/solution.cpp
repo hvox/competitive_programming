@@ -1,12 +1,12 @@
-// Score: 75_644
+// Score: 143_921
 // TLE: 2, 4
 
+#include <cmath>
 #include <iostream>
-#include <math.h>
 #include <set>
 #include <vector>
 
-#define DEBUG true
+#define DEBUG false
 const int CPU_LIMIT = 300000;
 
 struct Server {
@@ -20,6 +20,7 @@ struct Server {
 
 struct VirtualServer {
   int cpu_usage = 0;
+  int max_cpu_usage = 0;
   int16_t cpu;
   int16_t ram;
   int8_t home;
@@ -67,7 +68,7 @@ void reallocate_vms(int next_time_point) {
       if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
           v.free_ram < u.ram)
         continue;
-      int score = v.cpu_usage + u.cpu_usage <= v.total_cpu * CPU_LIMIT
+      int score = v.cpu_usage + u.max_cpu_usage <= v.total_cpu * CPU_LIMIT
                       ? 0
                       : (1 << v.penalties) * (v.total_vms + 1);
       if (score < best_score) {
@@ -95,19 +96,19 @@ void update_statistics() {
     int cpu_usage;
     std::cin >> cpu_usage;
     cpu_usage *= VMS[i].cpu;
+    VMS[i].max_cpu_usage = std::max(VMS[i].max_cpu_usage, cpu_usage);
     int delta = cpu_usage - VMS[i].cpu_usage;
     VMS[i].cpu_usage += delta;
     SERVERS[VMS[i].home].cpu_usage += delta;
   }
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
     auto &srv = SERVERS[i];
-    int cpu_usage = srv.cpu_usage;
     if (srv.cpu_usage > srv.total_cpu * CPU_LIMIT) {
-      TOTAL_PENALTY += pow(2.0, srv.penalties++) * srv.total_vms;
+      TOTAL_PENALTY += std::pow(2.0, srv.penalties++) * srv.total_vms;
     }
     if (DEBUG)
       std::cout << "Server #" << i << " penalties: " << (int)srv.penalties
-                << "  cpu_usage: " << cpu_usage / 1000000 << " / "
+                << "  cpu_usage: " << srv.cpu_usage / 1000000 << " / "
                 << srv.total_cpu << std::endl;
   }
   if (DEBUG)
