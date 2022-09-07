@@ -1,4 +1,4 @@
-// Score: 108_430
+// Score: 164_910
 // TLE: 2, 4
 
 #include <algorithm>
@@ -93,6 +93,9 @@ void reallocate_vms(int next_time_point) {
   std::cout << std::endl;
 }
 
+bool cmp(VirtualServer &a, VirtualServer &b) {
+  return a.max_cpu_usage >= b.max_cpu_usage;
+}
 void update_statistics() {
   int cpu_usages[10000];
   for (int i = 0; i < NUMBER_OF_VMS; i++)
@@ -114,11 +117,11 @@ void update_statistics() {
                 << "  cpu_usage: " << srv.cpu_usage / 1000000 << " / "
                 << srv.total_cpu << std::endl;
   }
+  std::sort(VMS, VMS + NUMBER_OF_VMS, cmp);
   if (DEBUG)
     std::cout << "Total penalty: " << TOTAL_PENALTY << std::endl;
 }
 
-bool cmp(VirtualServer &a, VirtualServer &b) { return a.ram <= b.ram; }
 int main() {
   std::cin >> NUMBER_OF_SERVERS >> NUMBER_OF_VMS >> NUMBER_OF_TIME_POINTS;
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
@@ -136,7 +139,6 @@ int main() {
     SERVERS[parent].free_ram -= VMS[i].ram;
     SERVERS[parent].total_vms++;
   }
-  std::sort(VMS, VMS + NUMBER_OF_VMS, cmp);
   update_statistics();
   for (int time = 1; time < NUMBER_OF_TIME_POINTS; time++) {
     reallocate_vms(time);
