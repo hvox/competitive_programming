@@ -3,6 +3,7 @@
 // PE: 4
 
 #include <algorithm>
+#include <assert.h>
 #include <cmath>
 #include <iostream>
 #include <set>
@@ -123,6 +124,9 @@ void update_statistics() {
 
 int main() {
   std::cin >> NUMBER_OF_SERVERS >> NUMBER_OF_VMS >> NUMBER_OF_TIME_POINTS;
+  assert(NUMBER_OF_SERVERS <= 100);
+  assert(NUMBER_OF_VMS <= 10000);
+  assert(NUMBER_OF_TIME_POINTS == 432 or NUMBER_OF_TIME_POINTS == 5);
   for (int i = 0; i < NUMBER_OF_SERVERS; i++) {
     std::cin >> SERVERS[i].free_cpu >> SERVERS[i].free_ram;
     SERVERS[i].total_cpu = SERVERS[i].free_cpu;
