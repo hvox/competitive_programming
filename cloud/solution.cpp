@@ -32,7 +32,6 @@ int NUMBER_OF_SERVERS, NUMBER_OF_VMS, NUMBER_OF_TIME_POINTS;
 long double TOTAL_PENALTY = 0;
 Server SERVERS[100];
 VirtualServer VMS[10000];
-int16_t VMS_OFFSETS[10000];
 
 inline std::pair<int, int> move_vm(int vm, int destination) {
   int source = VMS[vm].home;
@@ -95,11 +94,11 @@ void reallocate_vms(int next_time_point) {
 }
 
 void update_statistics() {
-  for (int j = 0; j < NUMBER_OF_VMS; j++) {
-    int i = VMS_OFFSETS[j];
-    int cpu_usage;
-    std::cin >> cpu_usage;
-    cpu_usage *= VMS[i].cpu;
+  int cpu_usages[10000];
+  for (int i = 0; i < NUMBER_OF_VMS; i++)
+    std::cin >> cpu_usages[i];
+  for (int i = 0; i < NUMBER_OF_VMS; i++) {
+    int cpu_usage = cpu_usages[VMS[i].id] * VMS[i].cpu;
     VMS[i].max_cpu_usage = std::max(VMS[i].max_cpu_usage, cpu_usage);
     int delta = cpu_usage - VMS[i].cpu_usage;
     VMS[i].cpu_usage += delta;
@@ -138,8 +137,6 @@ int main() {
     SERVERS[parent].total_vms++;
   }
   std::sort(VMS, VMS + NUMBER_OF_VMS, cmp);
-  for (int i = 0; i < NUMBER_OF_VMS; i++)
-    VMS_OFFSETS[VMS[i].id] = i;
   update_statistics();
   for (int time = 1; time < NUMBER_OF_TIME_POINTS; time++) {
     reallocate_vms(time);
