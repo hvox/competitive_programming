@@ -1,5 +1,6 @@
-// Score: 928_787
-// TLE: 2, 4
+// Score: 1_060_272
+// TLE: 2
+// PE: 4
 
 #include <algorithm>
 #include <cmath>
@@ -58,7 +59,7 @@ void reallocate_vms(int next_time_point) {
   for (int i = 0; i < NUMBER_OF_VMS; i++) {
     auto &u = VMS[i];
     auto &srv = SERVERS[u.home];
-    if (steps[u.home] == 1 || srv.cpu_usage <= srv.total_cpu * CPU_LIMIT)
+    if (steps[u.home] == 2 || srv.cpu_usage <= srv.total_cpu * CPU_LIMIT)
       continue;
     if (DEBUG)
       std::cout << "Try to move VM#" << i << " from server#" << (int)u.home
@@ -67,7 +68,7 @@ void reallocate_vms(int next_time_point) {
     int best_score = 1e9;
     for (int j = 0; j < NUMBER_OF_SERVERS; j++) {
       auto &v = SERVERS[j];
-      if (u.home == j || steps[j] == 1 || v.free_cpu < u.cpu ||
+      if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
           v.free_ram < u.ram)
         continue;
       int score = v.cpu_usage + u.cpu * 1e6 <= v.total_cpu * CPU_LIMIT
