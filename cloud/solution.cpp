@@ -1,4 +1,4 @@
-// Score: 164_910
+// Score: 928_787
 // TLE: 2, 4
 
 #include <algorithm>
@@ -70,7 +70,7 @@ void reallocate_vms(int next_time_point) {
       if (u.home == j || steps[j] == 1 || v.free_cpu < u.cpu ||
           v.free_ram < u.ram)
         continue;
-      int score = v.cpu_usage + u.max_cpu_usage <= v.total_cpu * CPU_LIMIT
+      int score = v.cpu_usage + u.cpu * 1e6 <= v.total_cpu * CPU_LIMIT
                       ? 0
                       : (1 << v.penalties) * (v.total_vms + 1);
       if (score < best_score) {
@@ -93,9 +93,7 @@ void reallocate_vms(int next_time_point) {
   std::cout << std::endl;
 }
 
-bool cmp(VirtualServer &a, VirtualServer &b) {
-  return a.max_cpu_usage >= b.max_cpu_usage;
-}
+bool cmp(VirtualServer &a, VirtualServer &b) { return a.cpu >= b.cpu; }
 void update_statistics() {
   int cpu_usages[10000];
   for (int i = 0; i < NUMBER_OF_VMS; i++)
