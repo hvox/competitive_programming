@@ -1,4 +1,4 @@
-// Score: 1_060_272
+// Score: 4_454_708
 // TLE: 2
 // PE: 4
 
@@ -72,9 +72,10 @@ void reallocate_vms(int next_time_point) {
       if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
           v.free_ram < u.ram)
         continue;
-      int score = v.cpu_usage + u.cpu * 1e6 <= v.total_cpu * CPU_LIMIT
-                      ? 0
-                      : (1 << v.penalties) * (v.total_vms + 1);
+      int score =
+          (v.total_cpu - v.free_cpu) * 10 + u.cpu * 10 <= v.total_cpu * 3
+              ? 0
+              : (1 << v.penalties) * (v.total_vms + 1);
       if (score < best_score) {
         best_score = score;
         best_candidate = j;
