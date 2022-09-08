@@ -1,6 +1,5 @@
-// Score: 4_454_708
-// TLE: 2
-// PE: 4
+// Score: 7_844_341
+// TLE: 2, 4, 17, 18
 
 #include <algorithm>
 #include <assert.h>
@@ -18,7 +17,7 @@ struct Server {
   int16_t free_ram;
   int16_t total_vms;
   int8_t penalties = 0;
-  int cpu_usage = 0;
+  int64_t cpu_usage = 0;
 };
 
 struct VirtualServer {
