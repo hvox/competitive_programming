@@ -1,5 +1,4 @@
-// Score: 9_835_480
-// TLE: 2, 4
+// Score: 10_701_771
 
 #include <algorithm>
 #include <assert.h>
@@ -75,7 +74,7 @@ void reallocate_vms(int next_time_point) {
     if (DEBUG)
       std::cout << "Try to move VM#" << i << " from server#" << (int)u.home
                 << std::endl;
-    for (int t = 0; t < 1e4 / NUMBER_OF_VMS; t++) {
+    for (int t = 0; t < 1e6 / NUMBER_OF_VMS; t++) {
       int j = fast_randint() % NUMBER_OF_SERVERS;
       auto &v = SERVERS[j];
       if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
@@ -128,6 +127,7 @@ void update_statistics() {
 }
 
 int main() {
+  std::ios::sync_with_stdio(false);
   std::cin >> NUMBER_OF_SERVERS >> NUMBER_OF_VMS >> NUMBER_OF_TIME_POINTS;
   assert(NUMBER_OF_SERVERS <= 100);
   assert(NUMBER_OF_VMS <= 10000);
