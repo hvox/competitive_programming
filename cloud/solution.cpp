@@ -1,9 +1,10 @@
-// Score: 9_136_374
+// Score: 9_835_480
 // TLE: 2, 4
 
 #include <algorithm>
 #include <assert.h>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <set>
 #include <vector>
@@ -33,6 +34,16 @@ int NUMBER_OF_SERVERS, NUMBER_OF_VMS, NUMBER_OF_TIME_POINTS;
 long double TOTAL_PENALTY = 0;
 Server SERVERS[100];
 VirtualServer VMS[10000];
+
+uint64_t fast_randint(void) {
+  static uint64_t x = 123456789, y = 362436069, z = 521288629;
+  uint64_t t;
+  x ^= x << 16;
+  x ^= x >> 5;
+  x ^= x << 1;
+  t = x, x = y, y = z;
+  return z = t ^ x ^ y;
+}
 
 inline std::pair<int, int> move_vm(int vm, int destination) {
   int source = VMS[vm].home;
@@ -64,9 +75,8 @@ void reallocate_vms(int next_time_point) {
     if (DEBUG)
       std::cout << "Try to move VM#" << i << " from server#" << (int)u.home
                 << std::endl;
-    int best_candidate = -1;
-    int best_score = 1e9;
-    for (int j = 0; j < NUMBER_OF_SERVERS; j++) {
+    for (int t = 0; t < 1e4 / NUMBER_OF_VMS; t++) {
+      int j = fast_randint() % NUMBER_OF_SERVERS;
       auto &v = SERVERS[j];
       if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
           v.free_ram < u.ram)
@@ -75,19 +85,15 @@ void reallocate_vms(int next_time_point) {
           (v.total_cpu - v.free_cpu) * 10 + u.cpu * 10 <= v.total_cpu * 3
               ? 0
               : (1 << v.penalties) * (v.total_vms + 1);
-      if (score < best_score) {
-        best_score = score;
-        best_candidate = j;
-      }
+      if (score + u.ram >= (1 << srv.penalties) * srv.total_vms)
+        continue;
+      if (DEBUG)
+        std::cout << "\tmoved to server#" << j << std::endl;
+      steps[u.home]++;
+      steps[j]++;
+      reallocations.push_back(move_vm(i, j));
+      break;
     }
-    if (best_candidate == -1 ||
-        best_score + u.ram >= (1 << srv.penalties) * srv.total_vms)
-      continue;
-    if (DEBUG)
-      std::cout << "\tmoved to server#" << best_candidate << std::endl;
-    steps[u.home]++;
-    steps[best_candidate]++;
-    reallocations.push_back(move_vm(i, best_candidate));
   }
   std::cout << reallocations.size();
   for (auto &[u, v] : reallocations)
