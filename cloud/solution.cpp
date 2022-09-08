@@ -1,5 +1,5 @@
-// Score: 7_844_341
-// TLE: 2, 4, 17, 18
+// Score: 9_136_374
+// TLE: 2, 4
 
 #include <algorithm>
 #include <assert.h>
@@ -117,7 +117,6 @@ void update_statistics() {
                 << "  cpu_usage: " << srv.cpu_usage / 1000000 << " / "
                 << srv.total_cpu << std::endl;
   }
-  std::sort(VMS, VMS + NUMBER_OF_VMS, cmp);
   if (DEBUG)
     std::cout << "Total penalty: " << TOTAL_PENALTY << std::endl;
 }
@@ -143,6 +142,7 @@ int main() {
     SERVERS[parent].total_vms++;
   }
   update_statistics();
+  std::sort(VMS, VMS + NUMBER_OF_VMS, cmp);
   for (int time = 1; time < NUMBER_OF_TIME_POINTS; time++) {
     reallocate_vms(time);
     update_statistics();
