@@ -1,4 +1,4 @@
-// Score: 10_701_771
+// Score: 10_938_688
 
 #include <algorithm>
 #include <assert.h>
@@ -144,7 +144,7 @@ int main() {
     SERVERS[parent].total_vms++;
   }
   update_statistics();
-  std::sort(VMS, VMS + NUMBER_OF_VMS, cmp);
+  std::sort(VMS, VMS + NUMBER_OF_VMS - 1, cmp);
   for (int time = 1; time < NUMBER_OF_TIME_POINTS; time++) {
     reallocate_vms(time);
     update_statistics();
