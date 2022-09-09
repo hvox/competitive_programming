@@ -1,4 +1,4 @@
-// Score: 10_938_688
+// Score: 11_041_880
 
 #include <algorithm>
 #include <assert.h>
@@ -70,16 +70,16 @@ void reallocate_vms(int next_time_point) {
     if (DEBUG)
       std::cout << "Try to move VM#" << i << " from server#" << (int)u.home
                 << std::endl;
-    for (int t = 0; t < 1e6 / NUMBER_OF_VMS; t++) {
+    for (int t = 0; t < 1e7 / NUMBER_OF_VMS; t++) {
       int j = fast_randint() % NUMBER_OF_SERVERS;
       auto &v = SERVERS[j];
       if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
           v.free_ram < u.ram)
         continue;
-      int score =
-          (v.total_cpu - v.free_cpu) * 10 + u.cpu * 10 <= v.total_cpu * 3
-              ? 0
-              : (1 << v.penalties) * (v.total_vms + 1);
+      int score = (v.total_cpu - v.free_cpu) * 10 + u.max_cpu_usage / 100000 <=
+                          v.total_cpu * 3
+                      ? 0
+                      : (1 << v.penalties) * (v.total_vms + 1);
       if (score + u.ram >= (1 << srv.penalties) * srv.total_vms)
         continue;
       if (DEBUG)
