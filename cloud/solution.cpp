@@ -60,10 +60,6 @@ inline std::pair<int, int> move_vm(int vm, int destination) {
 }
 
 void reallocate_vms(int next_time_point) {
-  if (TOTAL_PENALTY > 1e19) {
-    std::cout << 0 << std::endl;
-    return;
-  }
   int steps[100] = {};
   std::vector<std::pair<int, int>> reallocations;
   for (int i = 0; i < NUMBER_OF_VMS; i++) {
