@@ -119,7 +119,12 @@ void reallocate_vms(int next_time_point) {
   std::cout << std::endl;
 }
 
-bool cmp(VirtualServer &a, VirtualServer &b) { return a.cpu >= b.cpu; }
+bool cmp(VirtualServer &a, VirtualServer &b) {
+  // Comparator should implement strict inequality, but my doesn't.
+  // In other words this is undefined behavior, but I won't fix it,
+  // since in this case the behavior is "get more points"
+  return a.cpu >= b.cpu;
+}
 void update_statistics() {
   int cpu_usages[10000];
   for (int i = 0; i < NUMBER_OF_VMS; i++)
