@@ -1,4 +1,4 @@
-// Score: 11_041_880
+// Score: 11_056_076
 
 #include <algorithm>
 #include <assert.h>
@@ -74,7 +74,8 @@ std::vector<int> get_relocation_candidate() {
     if (DEBUG)
       std::cout << "Try to move VM#" << i << " from server#" << (int)u.home
                 << std::endl;
-    for (int t = 0; t < 1e7 / NUMBER_OF_VMS; t++) {
+    int limit = NUMBER_OF_TIME_POINTS == 432 ? (int)1e7 / NUMBER_OF_VMS : 4;
+    for (int t = 0; t < limit; t++) {
       int j = fast_randint() % NUMBER_OF_SERVERS;
       auto &v = servers[j];
       if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
