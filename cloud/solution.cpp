@@ -1,4 +1,4 @@
-// Score: 11_907_987
+// Score: 11_909_431
 
 #include <algorithm>
 #include <assert.h>
@@ -74,7 +74,7 @@ std::vector<int> get_relocation_candidate() {
     if (DEBUG)
       std::cout << "Try to move VM#" << i << " from server#" << (int)u.home
                 << std::endl;
-    int limit = NUMBER_OF_TIME_POINTS == 432 ? (int)1e7 / NUMBER_OF_VMS : 4;
+    int limit = NUMBER_OF_TIME_POINTS == 432 ? (int)1e6 / NUMBER_OF_VMS : 4;
     for (int t = 0; t < limit; t++) {
       int j = fast_randint() % NUMBER_OF_SERVERS;
       auto &v = servers[j];
@@ -120,14 +120,14 @@ int get_reallocation_cost(std::vector<int> &reallocation) {
   }
   for (int j = 0; j < NUMBER_OF_SERVERS; j++)
     if (cpu_usage[j] > SERVERS[j].total_cpu * CPU_LIMIT)
-      cost += (1 << SERVERS[j].penalties) * vms[j];
+      cost += (255 << SERVERS[j].penalties) * vms[j];
   return cost;
 }
 
 std::vector<int> get_best_reallocation_scheme() {
   auto best_realocation = get_relocation_candidate();
   int best_cost = get_reallocation_cost(best_realocation);
-  for (int i = 1; i < 10; i++) {
+  for (int i = 1; i < 100; i++) {
     auto candidate = get_relocation_candidate();
     int current_cost = get_reallocation_cost(candidate);
     if (current_cost < best_cost) {
