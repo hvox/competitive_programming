@@ -1,4 +1,4 @@
-// Score: 11_056_076
+// Score: 11_907_987
 
 #include <algorithm>
 #include <assert.h>
@@ -107,8 +107,39 @@ std::vector<int> get_relocation_candidate() {
   return reallocations;
 }
 
+int get_reallocation_cost(std::vector<int> &reallocation) {
+  int cost = 0;
+  std::vector<int64_t> cpu_usage(NUMBER_OF_SERVERS);
+  std::vector<int> vms(NUMBER_OF_SERVERS);
+  for (int i = 0; i < NUMBER_OF_VMS; i++) {
+    int j = reallocation[i];
+    vms[j]++;
+    cpu_usage[j] += VMS[i].cpu_usage;
+    if (j != VMS[i].home)
+      cost += VMS[i].ram;
+  }
+  for (int j = 0; j < NUMBER_OF_SERVERS; j++)
+    if (cpu_usage[j] > SERVERS[j].total_cpu * CPU_LIMIT)
+      cost += (1 << SERVERS[j].penalties) * vms[j];
+  return cost;
+}
+
+std::vector<int> get_best_reallocation_scheme() {
+  auto best_realocation = get_relocation_candidate();
+  int best_cost = get_reallocation_cost(best_realocation);
+  for (int i = 1; i < 10; i++) {
+    auto candidate = get_relocation_candidate();
+    int current_cost = get_reallocation_cost(candidate);
+    if (current_cost < best_cost) {
+      best_realocation = candidate;
+      best_cost = current_cost;
+    }
+  }
+  return best_realocation;
+}
+
 void reallocate_vms(int next_time_point) {
-  auto next_homes = get_relocation_candidate();
+  auto next_homes = get_best_reallocation_scheme();
   std::vector<std::pair<int, int>> reallocation_list;
   for (int i = 0; i < NUMBER_OF_VMS; i++)
     if (next_homes[i] != VMS[i].home)
