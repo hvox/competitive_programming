@@ -59,12 +59,16 @@ inline std::pair<int, int> move_vm(int vm, int destination) {
   return {VMS[vm].id + 1, destination + 1};
 }
 
-void reallocate_vms(int next_time_point) {
+std::vector<int> get_relocation_candidate() {
   int steps[100] = {};
-  std::vector<std::pair<int, int>> reallocations;
+  std::vector<int> reallocations(NUMBER_OF_VMS);
+  std::vector<Server> servers(NUMBER_OF_SERVERS);
+  for (int i = 0; i < NUMBER_OF_SERVERS; i++)
+    servers[i] = SERVERS[i];
   for (int i = 0; i < NUMBER_OF_VMS; i++) {
+    reallocations[i] = VMS[i].home;
     auto &u = VMS[i];
-    auto &srv = SERVERS[u.home];
+    auto &srv = servers[u.home];
     if (steps[u.home] == 2 || srv.cpu_usage <= srv.total_cpu * CPU_LIMIT)
       continue;
     if (DEBUG)
@@ -72,7 +76,7 @@ void reallocate_vms(int next_time_point) {
                 << std::endl;
     for (int t = 0; t < 1e7 / NUMBER_OF_VMS; t++) {
       int j = fast_randint() % NUMBER_OF_SERVERS;
-      auto &v = SERVERS[j];
+      auto &v = servers[j];
       if (u.home == j || steps[j] == 2 || v.free_cpu < u.cpu ||
           v.free_ram < u.ram)
         continue;
@@ -86,13 +90,31 @@ void reallocate_vms(int next_time_point) {
         std::cout << "\tmoved to server#" << j << std::endl;
       steps[u.home]++;
       steps[j]++;
-      reallocations.push_back(move_vm(i, j));
+      int source = VMS[i].home;
+      servers[source].free_cpu += VMS[i].cpu;
+      servers[source].free_ram += VMS[i].ram;
+      servers[source].cpu_usage -= VMS[i].cpu_usage;
+      servers[source].total_vms--;
+      reallocations[i] = j;
+      servers[j].free_cpu -= VMS[i].cpu;
+      servers[j].free_ram -= VMS[i].ram;
+      servers[j].cpu_usage += VMS[i].cpu_usage;
+      servers[j].total_vms++;
       break;
     }
   }
-  std::cout << reallocations.size();
-  for (auto &[u, v] : reallocations)
-    std::cout << " " << u << " " << v;
+  return reallocations;
+}
+
+void reallocate_vms(int next_time_point) {
+  auto next_homes = get_relocation_candidate();
+  std::vector<std::pair<int, int>> reallocation_list;
+  for (int i = 0; i < NUMBER_OF_VMS; i++)
+    if (next_homes[i] != VMS[i].home)
+      reallocation_list.push_back(move_vm(i, next_homes[i]));
+  std::cout << reallocation_list.size();
+  for (auto reallocation : reallocation_list)
+    std::cout << " " << reallocation.first << " " << reallocation.second;
   std::cout << std::endl;
 }
 
