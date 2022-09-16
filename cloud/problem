@@ -1,2 +1,57 @@
 # Robust Cloud Scheduling
-The statement is huge and I am lazy.
+
+We have a cloud datacenter with $S$ servers and $V$ virtual machines (VMs)
+running inside. Servers have two types of resources: CPU cores and RAM.
+Each virtual machine is initially located on one of servers, and has a fixed
+allocated capacity of resources (i.e. several CPU cores and several gigabytes of
+RAM). Of course, the total capacity of VMs located on each server doesn't exceed
+the capacity of this server.A VM cannot use more resources than allocated, but
+its actual utilization of CPU may be lower (between $0\%$ and $100\%$ of
+allocated), and its exact value may change over time.To ensure high quality of
+service, we would like to balance the actual load evenly.
+More precisely, our goal is to keep real CPU load at or under $30\%$ for each
+server, while we have to pay extra costs for violations of this goal.We can
+solve the occurring problems and even prevent future violations by migrating
+some VMs from one server to another (with some constraints).
+VM migrations also cost money (a different amount for each VM).
+After any reallocation procedure, violations of the allocated (nominal) capacity
+are forbidden (but during the reallocation, the resource constraints may be
+violated).Our goal is to design a smart algorithm that will take a decision how
+to reassign some of the given VMs every hour, based on current and historical
+utilization, and minimize the cost of cloud operations over a period of $18$
+days for several datacenters.
+
+More formally, we have a series of $432 = 18 \times 24$ time points
+corresponding to intervals with 1 hour duration, and we can change the
+allocation of VMs over the servers between neighboring time points to minimize
+the total cost of changing the allocation and violating the $30\%$ CPU usage
+constraints.Servers and VMs have the following parameters:Each server is
+characterized by two values: the $i$-th server has $c_i$ CPU cores and $m_i$ GB
+RAM.Each VM is characterized by the following values: the $j$-th VM has capacity
+demands equal to $dc_j$ cores and $dm_j$ GB RAM.At any given time point $t$, the
+fraction of allocated CPU used by $j$-th VM is $uc_{j, t}$.
+These values are typically unknown in advance, thus your program must not depend
+on the future utilization percentage when changing VM allocation for the current
+time point.To change the VM allocation, you can move any VM to any other server.
+You can do it for multiple VMs between neighboring time points at once.
+All movements ordered at one time point are fast enough to be applied strictly
+before the next time point, when you will have to make the next scheduling
+decision.Each new proposed VM allocation must not violate the total server
+capacity constraints (i.e. the sum of capacities of VMs inside this server
+should not exceed the server capacity, both for CPU and RAM).
+Each server may host any number of VMs at any time point provided that its
+resource capacities are not violated.The network is a bottleneck, so for any two
+neighboring time points, the sets of VMs present on the same server during these
+time points cannot differ more than by $2$ VMs (for example, if we want to move
+$3$ VMs out of a certain server, and add $2$ other VMs to it, it will take at
+least $3$ allocation changes).The costs are calculated as follows:If a certain
+server has the real CPU utilization strictly exceeding $30\%$ at a certain time
+point (including the starting time point), we receive a penalty.
+If this is the $i$-th penalty for this specific server over all time points, we
+need to pay $(2^{i - 1} \times count)$ USD, where $count$ is the number of VMs
+currently located on this server.The cost to migrate $j$-th VM is $dm_j$
+USD.Each test case represents a different datacenter. Some VMs may have a stable
+CPU utilization, some may have a chaotic one, and some of them may have periodic
+utilization patterns.The ultimate goal is to design the algorithm that will
+minimize the amount of money spent on utilization violations and VM migrations,
+while satisfying the capacity constraints.
