@@ -1,4 +1,4 @@
-# score: 2046931 
+# score: 6447912
 import random
 import numpy
 import sys
@@ -32,8 +32,9 @@ def matmult(matrices):
 d, n = map(int, input().split())
 matrices = [numpy.array([list(map(int, input().split())) for _ in range(n)]) for _ in range(d)]
 original_matrices = [numpy.array(matrix) for matrix in matrices]
-for _ in range(int(n**1.5)):
-    matrices[randint(0, d - 1)][randint(0, n - 1)][randint(0, n - 1)] = 0
+for _ in range(int(n**2)):
+    x, y, z = (randint(0, d - 1), randint(0, n - 1), randint(0, n - 1))
+    matrices[x][y][z] *= (matrices[x][y][z] > 1)
 for matrix in matrices:
     for row in matrix:
         print(" ".join(map(str, row)))
