@@ -1,0 +1,26 @@
+# Neural Network Acceleration
+
+Neural networks are widely used in various fields and applications.
+With the rise of mobile terminals, neural networks are becoming more common on
+mobile phones, tablets, and other devices which require real-time performance of
+neural networks. Sparsification of neural networks is often involved to increase
+their performance, but, unfortunately, it also reduces their accuracy.
+Finding a way to reasonably sparsify a neural network becomes a challenge.In
+this problem, a neural network of depth d is represented as d matrices
+A_1, A_2, ..., A_d, where each matrix A_i consists of n rows and n columns.
+The process of the neural network is equivalent to calculation of matrix product
+A_1 * A_2 * ... * A_d.
+Matrix multiplication is performed sequentially from left to right:
+first calculate A_1 * A_2 = B_2, then B_2 * A_3 = B_3,
+and so on with B_d being the final result.
+Please note that it is not allowed to change the order of multiplication of the
+matrices. Simply put, sparsification of the neural network can be boiled down to
+setting some elements in the matrices A_i to 0. The point of sparsification
+is that if a matrix element is zero, then it is no use to multiply it by other
+elements of the matrices. This way, several multiplications of elements may be
+saved. At the same time, after sparsification, elements of the resulting matrix
+must be accurate enough so that the neural network remains useful.You are given
+a neural network in the form of matrices A_i. Your task is to sparsify it in
+such a way that its performance and accuracy are as balanced as possible, and
+accuracy of the neural network does not fall below a certain threshold.
+See the Scoring section for details.
