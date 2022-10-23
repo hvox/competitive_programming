@@ -2,6 +2,7 @@
 #include <tuple>
 #include <array>
 #include <vector>
+#include <assert.h>
 #include <iostream>
 #include <algorithm>
 using namespace std;
@@ -380,9 +381,15 @@ vector<Matrix> static_greedy2(vector<Matrix> matrices) {
 
 int main() {
   read_input();
-  // score: 36564749
-  auto result = ORIGINAL_MATRICES.size() > 3 ? first_lines_and_ones_to_zeros(ORIGINAL_MATRICES) : static_greedy_repeated(ORIGINAL_MATRICES);
-
-  print_output(result);
+  // score: 37651742
+  if (ORIGINAL_MATRICES.size() <= 3)
+    print_output(static_greedy_repeated(ORIGINAL_MATRICES));
+  else if (ORIGINAL_MATRICES.size() == 5)
+    print_output(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES));
+  else {
+    auto result = static_greedy_repeated(ORIGINAL_MATRICES);
+    if (get_score(result) < 999000) result = first_lines_and_ones_to_zeros(ORIGINAL_MATRICES);
+    print_output(result);
+  }
   return 0;
 }
