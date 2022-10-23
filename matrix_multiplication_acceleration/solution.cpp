@@ -19,6 +19,7 @@ using namespace std;
 #define FILENO fileno
 #endif
 #define loop while (true)
+#define sqr(x) ((x)*(x))
 bool output_is_tty() { return ISATTY(FILENO(stdout)); }
 
 typedef array<array<int64_t, 100>, 100> Matrix;
@@ -398,11 +399,11 @@ vector<Matrix> random_guesses(vector<Matrix> original_matrices) {
   vector<Matrix> best_matrices = original_matrices;
   double best_score = get_score(original_matrices);
   while (guesses--) {
-    vector<Matrix> matrices = original_matrices;
+    vector<Matrix> matrices = rand() % 2 == 0 ? original_matrices : best_matrices;
     for (int i = 0; i < matrices.size(); i++)
       for (int x = 0; x < N; x++)
         for (int y = 0; y < N; y++)
-          if (rand() % (matrices[i][x][y]+1) == 0)
+          if (rand() % (sqr(matrices[i][x][y])+1) == 0)
             matrices[i][x][y] = 0;
     double score = get_score(matrices);
     if (score > best_score) {
