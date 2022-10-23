@@ -1,0 +1,9 @@
+#!/usr/bin/env python3.10
+import sys
+import random
+
+d, n = map(int, sys.argv[1:])
+print(d, n)
+for _ in range(d):
+    for _ in range(n):
+        print(" ".join(str(random.randint(1, 5)) for _ in range(n)))
