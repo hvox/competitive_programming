@@ -69,20 +69,10 @@ int get_score(vector<Matrix> const &matrices) {
   for (int i = 0; i < N; i++) for (int j = 0; j < N; j++)
     acc += ((double)matrix[i][j]) / ORIGINAL_PRODUCT[i][j];
   acc /= N * N;
-  cout << "acc = " << acc << endl; 
+  // cout << "acc = " << acc << endl;
   if (acc < 0.6) return 0;
   double param = ((double)products) / ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
   return 5e6 * max(0.0, (acc - 1) / 2 + 1 - param);
-}
-
-vector<Matrix> ones_to_zeros(vector<Matrix> matrices) {
-  int max_x = N < 5 ? matrices.size() - 2 : matrices.size() - 1;
-  for (int x = 0; x <= max_x; x++)
-    for (int y = 0; y < N; y++)
-      for (int z = 0; z < N; z++)
-        if (matrices[x][y][z] == 1)
-          matrices[x][y][z] = 0;
-  return matrices;
 }
 
 void read_input() {
@@ -115,9 +105,27 @@ void print_output(vector<Matrix> const &matrices) {
   }
 }
 
+vector<Matrix> ones_to_zeros(vector<Matrix> matrices) {
+  int max_x = N < 5 ? matrices.size() - 2 : matrices.size() - 1;
+  for (int x = 0; x <= max_x; x++)
+    for (int y = 0; y < N; y++)
+      for (int z = 0; z < N; z++)
+        if (matrices[x][y][z] == 1)
+          matrices[x][y][z] = 0;
+  return matrices;
+}
+
+vector<Matrix> first_lines_to_zeros(vector<Matrix> matrices) {
+  int lines = 0.4 * N;
+  for (int i = 0; i < lines; i++)
+    for (int j = 0; j < N; j++)
+      matrices[0][i][j] = 0;
+  return matrices;
+}
+
 int main() {
   read_input();
-  auto result = ones_to_zeros(ORIGINAL_MATRICES);
+  auto result = first_lines_to_zeros(ORIGINAL_MATRICES);
   print_output(result);
   return 0;
 }
