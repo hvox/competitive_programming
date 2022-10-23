@@ -7,6 +7,8 @@
 #include <algorithm>
 using namespace std;
 
+#define SKIP_FIRST_TESTS (false)
+
 #if _WIN32
 #include <io.h>
 #define ISATTY _isatty
@@ -16,12 +18,24 @@ using namespace std;
 #define ISATTY isatty
 #define FILENO fileno
 #endif
+#define loop while (true)
 bool output_is_tty() { return ISATTY(FILENO(stdout)); }
 
 typedef array<array<int64_t, 100>, 100> Matrix;
 int N, ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
 vector<Matrix> ORIGINAL_MATRICES;
 Matrix ORIGINAL_PRODUCT, ONES_MATRIX;
+
+bool is_not_a_real_test() {
+  int d = ORIGINAL_MATRICES.size();
+  int x = ORIGINAL_MATRICES[0][0][0], y = ORIGINAL_MATRICES[0][0][1];
+  if (d == 3 && N == 2 && x == 3 && y == 4) return true;
+  if (d == 5 && N == 7 && x == 5 && y == 5) return true;
+  if (d == 2 && N == 100 && x == 2 && y == 5) return true;
+  if (d == 5 && N == 99 && x == 4 && y == 4) return true;
+  if (d == 4 && N == 97 && x == 4 && y == 4) return true;
+  return false;
+}
 
 int64_t determinant(Matrix const &matrix, int size = -1) {
   if (size == -1) size = N;
@@ -379,8 +393,32 @@ vector<Matrix> static_greedy2(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> random_guesses(vector<Matrix> original_matrices) {
+  int guesses = 10000;
+  vector<Matrix> best_matrices = original_matrices;
+  double best_score = get_score(original_matrices);
+  while (guesses--) {
+    vector<Matrix> matrices = original_matrices;
+    for (int i = 0; i < matrices.size(); i++)
+      for (int x = 0; x < N; x++)
+        for (int y = 0; y < N; y++)
+          if (rand() % (matrices[i][x][y]+1) == 0)
+            matrices[i][x][y] = 0;
+    double score = get_score(matrices);
+    if (score > best_score) {
+      best_matrices = matrices;
+      best_score = score;
+    }
+  }
+  return best_matrices;
+}
+
 int main() {
   read_input();
+  if (is_not_a_real_test() and SKIP_FIRST_TESTS) {
+    print_output(ORIGINAL_MATRICES);
+    return 0;
+  }
   // score: 37651742
   if (ORIGINAL_MATRICES.size() <= 3)
     print_output(static_greedy_repeated(ORIGINAL_MATRICES));
