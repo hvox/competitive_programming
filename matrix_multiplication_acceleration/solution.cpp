@@ -130,9 +130,21 @@ vector<Matrix> first_elements_to_zeros(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> first_lines_and_ones_to_zeros(vector<Matrix> matrices) {
+  int lines = N * 4 / 10;
+  for (int i = 0; i < lines; i++)
+    for (int j = 0; j < N; j++)
+      matrices[0][i][j] = 0;
+  const int zeros = N * N * 4 / 10;
+  for (int j = 0; j < zeros - lines * N; j++)
+    if (matrices[0][lines][j] == 1)
+      matrices[0][lines][j] = 0;
+  return matrices;
+}
+
 int main() {
   read_input();
-  auto result = first_elements_to_zeros(ORIGINAL_MATRICES);
+  auto result = first_lines_and_ones_to_zeros(ORIGINAL_MATRICES);
   print_output(result);
   return 0;
 }
