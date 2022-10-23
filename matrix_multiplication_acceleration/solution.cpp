@@ -414,14 +414,35 @@ vector<Matrix> random_guesses(vector<Matrix> original_matrices) {
   return best_matrices;
 }
 
+vector<Matrix> random_walk(vector<Matrix> matrices) {
+  int iterations = 160000000 / N / N / N / matrices.size();
+  double current_score = get_score(matrices);
+  while (iterations--) {
+    vector<Matrix> candidate = matrices;
+    for (int i = 0; i < matrices.size(); i++) for (int x = 0; x < N; x++) for (int y = 0; y < N; y++) {
+      if (rand() % (N*N) == 0) {
+        candidate[i][x][y] = candidate[i][x][y] != 0 ? 0 : ORIGINAL_MATRICES[i][x][y];
+      }
+    }
+    double score = get_score(candidate);
+    if (score > current_score) {
+      matrices = candidate;
+      current_score = score;
+    }
+  }
+  return matrices;
+}
+
 int main() {
   read_input();
   if (is_not_a_real_test() and SKIP_FIRST_TESTS) {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 37651742
-  if (ORIGINAL_MATRICES.size() <= 3)
+  // score: 37660594
+  if (ORIGINAL_MATRICES.size() <= 3 && N > 10)
+    print_output(random_walk(static_greedy_repeated(ORIGINAL_MATRICES)));
+  else if (ORIGINAL_MATRICES.size() <= 3)
     print_output(static_greedy_repeated(ORIGINAL_MATRICES));
   else if (ORIGINAL_MATRICES.size() == 5)
     print_output(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES));
