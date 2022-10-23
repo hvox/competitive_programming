@@ -1,3 +1,4 @@
+#include <set>
 #include <tuple>
 #include <array>
 #include <vector>
@@ -213,9 +214,61 @@ vector<Matrix> greedy_with_approximation(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> greedy2(vector<Matrix> matrices) {
+  if (matrices.size() != 2) return matrices;
+  Matrix &A = matrices[0], &B = matrices[1];
+  auto cmp = [](tuple<int, double, int> const &u, tuple<int, double, int> const &v) {
+    return get<2>(u) * 2 - get<1>(u) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS > get<2>(v) * 2 - get<1>(v) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
+  };
+  set<tuple<int, double, int>, decltype(cmp)> candidates;
+  vector<tuple<double, int>> candidates_flat(N*N*2);
+  for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) {
+    double a_acc = 0; for (int k = 0; k < N; k++) a_acc += ((double) B[j][k]) / ORIGINAL_PRODUCT[i][k];
+    double b_acc = 0; for (int k = 0; k < N; k++) b_acc += ((double) A[k][i]) / ORIGINAL_PRODUCT[k][j];
+    candidates.insert({i * N + j, a_acc * A[i][j] / N / N, N});
+    candidates_flat[i*N+j] = {a_acc * A[i][j] / N / N, N};
+    candidates.insert({N*N + i * N + j, b_acc * B[i][j] / N / N, N});
+    candidates_flat[N*N+i*N+j] = {b_acc * B[i][j] / N / N, N};
+  }
+  double acc = 1.0;
+  while (not candidates.empty()) {
+    // cout << "cands:\n"; for (auto [i, acc, zeros] : candidates) cout << "AB"[i / N / N] << " " << i / N % N << " " << i % N << " -> " << acc << " " << zeros << "\n";
+    auto candidate_iterator = candidates.begin();
+    auto [index, delta_acc, delta_ops] = *candidate_iterator;
+    candidates.erase(candidate_iterator);
+    if (delta_ops * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS) break;
+    if (acc - delta_acc < 0.6) continue;
+    int d = index / N / N, i = index / N % N, j = index % N;
+    // cout << "delete " << d << " " << i << " " << j << endl;
+    int value = matrices[d][i][j];
+    matrices[d][i][j] = 0;
+    acc -= delta_acc;
+    if (d == 0) {
+      for (int k = 0; k < N; k++) { // B[j][k]
+        int b_index = N*N + j*N + k;
+        auto[b_acc, b_ops] = candidates_flat[b_index];
+        if (candidates.erase({b_index, b_acc, b_ops}) == 0) continue;
+        b_acc -= (double) value * B[j][k] / ORIGINAL_PRODUCT[i][k] / N / N; b_ops--;
+        candidates_flat[b_index] = {b_acc, b_ops};
+        candidates.insert({b_index, b_acc, b_ops});
+      }
+    } else {
+      for (int k = 0; k < N; k++) { // A[k][i]
+        int a_index = k*N + i;
+        auto[a_acc, a_ops] = candidates_flat[a_index];
+        if (candidates.erase({a_index, a_acc, a_ops}) == 0) continue;
+        a_acc -= (double) value * A[k][i] / ORIGINAL_PRODUCT[k][j] / N / N; a_ops--;
+        candidates_flat[a_index] = {a_acc, a_ops};
+        candidates.insert({a_index, a_acc, a_ops});
+      }
+    }
+  }
+  return matrices;
+}
+
 int main() {
   read_input();
-  auto result = greedy_with_approximation(ORIGINAL_MATRICES);
+  auto result = greedy2(ORIGINAL_MATRICES);
   print_output(result);
   return 0;
 }
