@@ -462,8 +462,9 @@ void mask_to_matrix(vector<Matrix> &matrices, int mask) {
 
 vector<Matrix> the_best() {
   vector<Matrix> matrices(NUMBER_OF_MATRICES);
-  int best_mask = 0, number_of_masks = 1 << NUMBER_OF_MATRICES * N * N;
-  double best_score = --number_of_masks;
+  int number_of_masks = 1 << NUMBER_OF_MATRICES * N * N;
+  int best_mask = --number_of_masks;
+  double best_score = 0;
   for (int mask = 0; mask < number_of_masks; mask++) {
     mask_to_matrix(matrices, mask);
     double score = get_score(matrices);
@@ -483,7 +484,7 @@ int main() {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 37963153
+  // score: 37963047
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() <= 3)
