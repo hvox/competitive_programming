@@ -1,11 +1,13 @@
 #include <set>
 #include <tuple>
 #include <array>
+#include <chrono>
 #include <vector>
 #include <assert.h>
 #include <iostream>
 #include <algorithm>
 using namespace std;
+using namespace std::chrono;
 
 #define SKIP_FIRST_TESTS (false)
 
@@ -26,6 +28,7 @@ typedef array<array<int64_t, 100>, 100> Matrix;
 int N, ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
 vector<Matrix> ORIGINAL_MATRICES;
 Matrix ORIGINAL_PRODUCT, ONES_MATRIX;
+system_clock::time_point THE_START_TIME;
 
 bool is_not_a_real_test() {
   int d = ORIGINAL_MATRICES.size();
@@ -433,23 +436,37 @@ vector<Matrix> random_walk(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> chronical_random_walk(vector<Matrix> matrices) {
+  double current_score = get_score(matrices);
+	while (duration_cast<microseconds>(high_resolution_clock::now() - THE_START_TIME).count() < 1983666) {
+    vector<Matrix> candidate = matrices;
+    for (int i = 0; i < 1; i++) candidate[rand()%matrices.size()][rand()%N][rand()%N] = 0;
+    for (int j = 0; j < 1; j++) { int i = rand() % matrices.size(), x = rand()%N, y = rand()%N; candidate[i][x][y] = ORIGINAL_MATRICES[i][x][y]; }
+    double score = get_score(candidate);
+    if (score > current_score) {
+      matrices = candidate;
+      current_score = score;
+    }
+  }
+  return matrices;
+}
+
 int main() {
+  THE_START_TIME = high_resolution_clock::now();
   read_input();
   if (is_not_a_real_test() and SKIP_FIRST_TESTS) {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 37660594
-  if (ORIGINAL_MATRICES.size() <= 3 && N > 10)
-    print_output(random_walk(static_greedy_repeated(ORIGINAL_MATRICES)));
-  else if (ORIGINAL_MATRICES.size() <= 3)
-    print_output(static_greedy_repeated(ORIGINAL_MATRICES));
+  // score: 37948211
+  if (ORIGINAL_MATRICES.size() <= 3)
+    print_output(chronical_random_walk(static_greedy_repeated(ORIGINAL_MATRICES)));
   else if (ORIGINAL_MATRICES.size() == 5)
-    print_output(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES));
+    print_output(chronical_random_walk(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES)));
   else {
     auto result = static_greedy_repeated(ORIGINAL_MATRICES);
     if (get_score(result) < 999000) result = first_lines_and_ones_to_zeros(ORIGINAL_MATRICES);
-    print_output(result);
+    print_output(chronical_random_walk(result));
   }
   return 0;
 }
