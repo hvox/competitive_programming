@@ -150,7 +150,7 @@ void print_output(vector<Matrix> const &matrices) {
     for (int i = 0; i < ORIGINAL_MATRICES.size(); i++)
       if (N < 5 and false)
         cout << "det[" << i << "] = " << determinant(ORIGINAL_MATRICES[i]) << endl;
-    cout << "score = " << score << "\t " << "acc = " << acc << endl;
+    cout << "d=" << ORIGINAL_MATRICES.size() << "  score = " << score << "\t " << "acc = " << acc << endl;
   }
 }
 
