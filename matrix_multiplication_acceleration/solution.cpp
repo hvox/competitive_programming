@@ -116,16 +116,23 @@ vector<Matrix> ones_to_zeros(vector<Matrix> matrices) {
 }
 
 vector<Matrix> first_lines_to_zeros(vector<Matrix> matrices) {
-  int lines = 0.4 * N;
+  int lines = N * 4 / 10;
   for (int i = 0; i < lines; i++)
     for (int j = 0; j < N; j++)
       matrices[0][i][j] = 0;
   return matrices;
 }
 
+vector<Matrix> first_elements_to_zeros(vector<Matrix> matrices) {
+  const int zeros = N * N * 4 / 10;
+  for (int i = 0; i < zeros; i++)
+    matrices[0][i / N][i % N] = 0;
+  return matrices;
+}
+
 int main() {
   read_input();
-  auto result = first_lines_to_zeros(ORIGINAL_MATRICES);
+  auto result = first_elements_to_zeros(ORIGINAL_MATRICES);
   print_output(result);
   return 0;
 }
