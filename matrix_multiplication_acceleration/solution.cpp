@@ -22,6 +22,25 @@ int N, ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
 vector<Matrix> ORIGINAL_MATRICES;
 Matrix ORIGINAL_PRODUCT, ONES_MATRIX;
 
+int64_t determinant(Matrix const &matrix, int size = -1) {
+  if (size == -1) size = N;
+  if (size == 1) return matrix[0][0];
+  if (size == 2) return matrix[0][0] * matrix[1][1] - matrix[1][0] * matrix[0][1];
+  int64_t det = 0;
+  for (int i = 0; i < size; i++) {
+    Matrix submatrix;
+    for (int x = 0, sub_x = 0; x < size; x++) {
+      if (x == i) continue;
+      for (int y = 1; y < size; y++)
+        submatrix[sub_x][y - 1] = matrix[x][y];
+      sub_x++;
+    }
+    int64_t delta = determinant(submatrix, size - 1) * matrix[i][0];
+    det += i % 2 == 0 ? delta : -delta;
+  }
+  return det;
+}
+
 Matrix matmul(Matrix const &A, Matrix const &B) {
   Matrix matrix;
   for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) {
@@ -128,6 +147,9 @@ void print_output(vector<Matrix> const &matrices) {
   } else {
     int score = get_score(matrices);
     double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
+    for (int i = 0; i < ORIGINAL_MATRICES.size(); i++)
+      if (N < 5 and false)
+        cout << "det[" << i << "] = " << determinant(ORIGINAL_MATRICES[i]) << endl;
     cout << "score = " << score << "\t " << "acc = " << acc << endl;
   }
 }
