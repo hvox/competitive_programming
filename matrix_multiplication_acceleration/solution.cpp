@@ -218,6 +218,8 @@ vector<Matrix> greedy2(vector<Matrix> matrices) {
   if (matrices.size() != 2) return matrices;
   Matrix &A = matrices[0], &B = matrices[1];
   auto cmp = [](tuple<int, double, int> const &u, tuple<int, double, int> const &v) {
+    if (N > 5)
+      return get<1>(u) < get<1>(v);
     return get<2>(u) * 2 - get<1>(u) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS > get<2>(v) * 2 - get<1>(v) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
   };
   set<tuple<int, double, int>, decltype(cmp)> candidates;
@@ -236,7 +238,7 @@ vector<Matrix> greedy2(vector<Matrix> matrices) {
     auto candidate_iterator = candidates.begin();
     auto [index, delta_acc, delta_ops] = *candidate_iterator;
     candidates.erase(candidate_iterator);
-    if (delta_ops * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS) break;
+    if (delta_ops * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS) continue;
     if (acc - delta_acc < 0.6) continue;
     int d = index / N / N, i = index / N % N, j = index % N;
     // cout << "delete " << d << " " << i << " " << j << endl;
