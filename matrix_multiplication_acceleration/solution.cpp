@@ -268,9 +268,43 @@ vector<Matrix> greedy2(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> static_greedy_with_approximation(vector<Matrix> matrices) {
+  const int matrices_size = matrices.size();
+  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
+  vector<tuple<int, double>> candidates;
+  for (int i = 0; i < matrices_size; i++) {
+    auto &prefix = i > 0 ? prefixes[i - 1] : ONES_MATRIX;
+    auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
+    Matrix &matrix = matrices[i];
+    for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
+      double value = matrices[i][x0][y0];
+      double delta_acc = 0;
+      int delta_multiplications = 0;
+      for (int x = 0; x < N; x++) {
+        if (prefix[x][x0] == 0) continue;
+        delta_multiplications += 1; // TODO: have better counting of producs
+        for (int y = 0; y < N; y++) {
+          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
+        }
+      }
+      candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N)});
+    }
+  }
+  sort(candidates.begin(), candidates.end(), [&](auto const &u, auto const &v) { return get<1>(u) < get<1>(v); });
+  double acc = 1;
+  for (int i = 0; i < matrices_size * N * N; i++) {
+    auto [j, delta_acc] = candidates[i];
+    if (acc - delta_acc < 0.6 || N * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS)
+      break; // continue?
+    acc -= delta_acc;
+    matrices[j / N / N][(j / N) % N][j % N] = 0;
+  }
+  return matrices;
+}
+
 int main() {
   read_input();
-  auto result = greedy2(ORIGINAL_MATRICES);
+  auto result = static_greedy_with_approximation(ORIGINAL_MATRICES);
   print_output(result);
   return 0;
 }
