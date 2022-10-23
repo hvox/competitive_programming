@@ -380,7 +380,9 @@ vector<Matrix> static_greedy2(vector<Matrix> matrices) {
 
 int main() {
   read_input();
-  auto result = static_greedy_repeated(ORIGINAL_MATRICES);
+  // score: 36564749
+  auto result = ORIGINAL_MATRICES.size() > 3 ? first_lines_and_ones_to_zeros(ORIGINAL_MATRICES) : static_greedy_repeated(ORIGINAL_MATRICES);
+
   print_output(result);
   return 0;
 }
