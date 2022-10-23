@@ -25,7 +25,7 @@ using namespace std::chrono;
 bool output_is_tty() { return ISATTY(FILENO(stdout)); }
 
 typedef array<array<int64_t, 100>, 100> Matrix;
-int N, ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
+int N, ORIGINAL_NUMBER_OF_MULTIPLICATIONS, NUMBER_OF_MATRICES;
 vector<Matrix> ORIGINAL_MATRICES;
 Matrix ORIGINAL_PRODUCT, ONES_MATRIX;
 system_clock::time_point THE_START_TIME;
@@ -136,8 +136,10 @@ int get_score(vector<Matrix> const &matrices) {
 }
 
 void read_input() {
+  THE_START_TIME = high_resolution_clock::now();
   int d;
   cin >> d >> N;
+  NUMBER_OF_MATRICES = d;
   vector<Matrix> matrices(d);
   matrices.resize(d);
   for (int i = 0; i < d; i++)
@@ -451,15 +453,40 @@ vector<Matrix> chronical_random_walk(vector<Matrix> matrices) {
   return matrices;
 }
 
+void mask_to_matrix(vector<Matrix> &matrices, int mask) {
+  const int number_of_elements = N * N * NUMBER_OF_MATRICES;
+  for (int i = 0; i < number_of_elements; i++)
+    matrices[i / N / N][i / N % N][i % N] =
+      ((mask >> i) & 1) * ORIGINAL_MATRICES[i / N / N][i / N % N][i % N];
+}
+
+vector<Matrix> the_best() {
+  vector<Matrix> matrices(NUMBER_OF_MATRICES);
+  int best_mask = 0, number_of_masks = 1 << NUMBER_OF_MATRICES * N * N;
+  double best_score = --number_of_masks;
+  for (int mask = 0; mask < number_of_masks; mask++) {
+    mask_to_matrix(matrices, mask);
+    double score = get_score(matrices);
+    if (score > best_score) {
+      best_score = score;
+      best_mask = mask;
+    }
+  }
+  mask_to_matrix(matrices, best_mask);
+  return matrices;
+}
+
 int main() {
-  THE_START_TIME = high_resolution_clock::now();
   read_input();
+  srand(1123);
   if (is_not_a_real_test() and SKIP_FIRST_TESTS) {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 37948211
-  if (ORIGINAL_MATRICES.size() <= 3)
+  // score: 37963153
+  if (NUMBER_OF_MATRICES * N * N <= 12)
+    print_output(the_best());
+  else if (ORIGINAL_MATRICES.size() <= 3)
     print_output(chronical_random_walk(static_greedy_repeated(ORIGINAL_MATRICES)));
   else if (ORIGINAL_MATRICES.size() == 5)
     print_output(chronical_random_walk(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES)));
