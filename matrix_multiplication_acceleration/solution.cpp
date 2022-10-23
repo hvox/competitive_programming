@@ -1,3 +1,4 @@
+#include <tuple>
 #include <array>
 #include <vector>
 #include <iostream>
@@ -18,7 +19,7 @@ bool output_is_tty() { return ISATTY(FILENO(stdout)); }
 typedef array<array<int64_t, 100>, 100> Matrix;
 int N, ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
 vector<Matrix> ORIGINAL_MATRICES;
-Matrix ORIGINAL_PRODUCT;
+Matrix ORIGINAL_PRODUCT, ONES_MATRIX;
 
 Matrix matmul(Matrix const &A, Matrix const &B) {
   Matrix matrix;
@@ -63,12 +64,32 @@ pair<Matrix, int> matmulcnt(vector<Matrix> const &matrices) {
   return {matrix, total_number_of_operations};
 }
 
-int get_score(vector<Matrix> const &matrices) {
-  auto [matrix, products] = matmulcnt(matrices);
+vector<Matrix> get_prefixes(vector<Matrix> const &matrices) {
+  vector<Matrix> prefixes;
+  prefixes.push_back(matrices[0]);
+  for (int i = 1; i < matrices.size(); i++)
+    prefixes.push_back(matmul(prefixes[i - 1], matrices[i]));
+  return prefixes;
+}
+
+vector<Matrix> get_suffixes(vector<Matrix> const &matrices) {
+  vector<Matrix> suffixes;
+  suffixes.push_back(*matrices.rbegin());
+  for (int i = matrices.size() - 2; i >= 0; i--)
+    suffixes.push_back(matmul(matrices[i], *suffixes.rbegin()));
+  return suffixes;
+}
+
+double sum_div(Matrix const &A, Matrix const &B) {
   double acc = 0;
   for (int i = 0; i < N; i++) for (int j = 0; j < N; j++)
-    acc += ((double)matrix[i][j]) / ORIGINAL_PRODUCT[i][j];
-  acc /= N * N;
+    acc += ((double)A[i][j]) / B[i][j];
+  return acc / (N * N);
+}
+
+int get_score(vector<Matrix> const &matrices) {
+  auto [matrix, products] = matmulcnt(matrices);
+  double acc = sum_div(matrix, ORIGINAL_PRODUCT);
   // cout << "acc = " << acc << endl;
   if (acc < 0.6) return 0;
   double param = ((double)products) / ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
@@ -86,8 +107,12 @@ void read_input() {
         cin >> matrices[i][j][k];
   auto [product, operations] = matmulcnt(matrices);
   ORIGINAL_PRODUCT = product;
+  // cout << "ORIGINAL_PRODUCT:"; for (int i = 0; i < N; i++) {cout << " [" << product[i][0]; for(int j = 1; j < N; j++) cout << " " << product[i][j]; cout << "]";} cout << endl;
   ORIGINAL_MATRICES = matrices;
   ORIGINAL_NUMBER_OF_MULTIPLICATIONS = operations;
+  for (int i = 0; i < N; i++)
+    ONES_MATRIX[i][i] = 1;
+
 }
 
 void print_output(vector<Matrix> const &matrices) {
@@ -101,7 +126,8 @@ void print_output(vector<Matrix> const &matrices) {
       }
   } else {
     int score = get_score(matrices);
-    cout << "score = " << score << endl;
+    double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
+    cout << "score = " << score << "\t " << "acc = " << acc << endl;
   }
 }
 
@@ -142,9 +168,54 @@ vector<Matrix> first_lines_and_ones_to_zeros(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> greedy_with_approximation(vector<Matrix> matrices) {
+  const int matrices_size = matrices.size();
+  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
+  // cout << "-- prefixes --" << endl; for (int i = 0; i < prefixes.size(); i++) {for (int j = 0; j < N; j++) { for (int k = 0; k < N; k++) cout << prefixes[i][j][k] << " "; cout << endl;} cout << endl;}
+  // cout << "-- suffixes --" << endl; for (int i = 0; i < suffixes.size(); i++) {for (int j = 0; j < N; j++) { for (int k = 0; k < N; k++) cout << suffixes[i][j][k] << " "; cout << endl;} cout << endl;}
+  vector<tuple<int, double, int>> candidates;
+  for (int i = 0; i < matrices_size; i++) {
+    auto &prefix = i > 0 ? prefixes[i - 1] : ONES_MATRIX;
+    auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
+    // cout << "\ti = " << i << endl;
+    Matrix &matrix = matrices[i];
+    // cout << "prefix:"; for (int i = 0; i < N; i++) {cout << " [" << prefix[i][0]; for(int j = 1; j < N; j++) cout << " " << prefix[i][j]; cout << "]";} cout << endl;
+    // cout << "matrix:"; for (int i = 0; i < N; i++) {cout << " [" << matrix[i][0]; for(int j = 1; j < N; j++) cout << " " << matrix[i][j]; cout << "]";} cout << endl;
+    // cout << "suffix:"; for (int i = 0; i < N; i++) {cout << " [" << suffix[i][0]; for(int j = 1; j < N; j++) cout << " " << suffix[i][j]; cout << "]";} cout << endl;
+    for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
+      double value = matrices[i][x0][y0];
+      // if (value == 0) continue;
+      double delta_acc = 0;
+      int delta_multiplications = 0;
+      for (int x = 0; x < N; x++) {
+        if (prefix[x][x0] == 0) continue;
+        delta_multiplications += 1; // TODO: have better counting of producs
+        for (int y = 0; y < N; y++) {
+          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
+        }
+      }
+      candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N), delta_multiplications});
+    }
+  }
+  sort(candidates.begin(), candidates.end(), [&](auto const &u, auto const &v) {
+    return get<2>(u) / get<1>(u) > get<2>(v) / get<1>(v);
+  });
+  // cout << "candidates:" << endl; for (auto [i, acc, mults] : candidates) cout << "\ti=" << i << " acc=" << acc << " mults=" << mults << " -> " << mults / acc << endl;
+  double acc = 1;
+  for (int i = 0; i < matrices_size * N * N; i++) {
+    auto [j, delta_acc, delta_mults] = candidates[i];
+    // cout << "iteration: " << i << " -> " << j << " " << delta_acc << " " << delta_mults << endl;
+    if (acc - delta_acc < 0.6 || delta_mults * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS)
+      break;
+    acc -= delta_acc;
+    matrices[j / N / N][(j / N) % N][j % N] = 0;
+  }
+  return matrices;
+}
+
 int main() {
   read_input();
-  auto result = first_lines_and_ones_to_zeros(ORIGINAL_MATRICES);
+  auto result = greedy_with_approximation(ORIGINAL_MATRICES);
   print_output(result);
   return 0;
 }
