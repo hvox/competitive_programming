@@ -202,7 +202,7 @@ vector<Matrix> greedy_with_approximation(vector<Matrix> matrices) {
     return get<2>(u) / get<1>(u) > get<2>(v) / get<1>(v);
   });
   // cout << "candidates:" << endl; for (auto [i, acc, mults] : candidates) cout << "\ti=" << i << " acc=" << acc << " mults=" << mults << " -> " << mults / acc << endl;
-  double acc = 1;
+  double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
   for (int i = 0; i < matrices_size * N * N; i++) {
     auto [j, delta_acc, delta_mults] = candidates[i];
     // cout << "iteration: " << i << " -> " << j << " " << delta_acc << " " << delta_mults << endl;
@@ -302,9 +302,14 @@ vector<Matrix> static_greedy_with_approximation(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> static_greedy_repeated(vector<Matrix> matrices) {
+  matrices = static_greedy_with_approximation(matrices);
+  return greedy_with_approximation(matrices);
+}
+
 int main() {
   read_input();
-  auto result = static_greedy_with_approximation(ORIGINAL_MATRICES);
+  auto result = static_greedy_repeated(ORIGINAL_MATRICES);
   print_output(result);
   return 0;
 }
