@@ -474,7 +474,7 @@ vector<Matrix> chronical_random_walk(vector<Matrix> matrices) {
 	while (duration_cast<microseconds>(high_resolution_clock::now() - THE_START_TIME).count() < 1983666) {
     vector<Matrix> candidate = matrices;
     for (int i = 0; i < 1; i++) candidate[rand()%matrices.size()][rand()%N][rand()%N] = 0;
-    for (int j = 0; j < 1; j++) { int i = rand() % matrices.size(), x = rand()%N, y = rand()%N; candidate[i][x][y] = ORIGINAL_MATRICES[i][x][y]; }
+    for (int j = 0; j < 2; j++) { int i = rand() % matrices.size(), x = rand()%N, y = rand()%N; candidate[i][x][y] = ORIGINAL_MATRICES[i][x][y]; }
     double score = get_score(candidate);
     if (score > current_score) {
       matrices = candidate;
