@@ -508,23 +508,44 @@ vector<Matrix> the_best() {
   return matrices;
 }
 
+vector<Matrix> smallest_lines_to_zeros(vector<Matrix> matrices) {
+  Matrix product = matmul(matrices);
+  vector<int64_t> sums;
+  vector<int> indexes;
+  for (int i = 0; i < N; i++) {
+    int64_t sum = 0;
+    for (int j = 0; j < N; j++)
+      sum += product[i][j];
+    indexes.push_back(i);
+    sums.push_back(sum);
+  }
+  sort(indexes.begin(), indexes.end(), [&](auto const &i, auto const &j) {
+    return sums[i] > sums[j];
+  });
+  int lines = N * 4 / 10;
+  for (int i = 0; i < lines; i++)
+    for (int j = 0; j < N; j++)
+      matrices[0][indexes[i]][j] = 0;
+  return matrices;
+}
+
 int main() {
   read_input();
-  srand(1123);
+  srand(7);
   if (is_not_a_real_test() and SKIP_FIRST_TESTS) {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 38784842
+  // score: 38801469
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() == 5)
-    print_output(chronical_random_walk(static_greedy_with_approximation(first_lines_to_zeros(ORIGINAL_MATRICES))));
+    print_output(chronical_random_walk(static_greedy_with_approximation(smallest_lines_to_zeros(ORIGINAL_MATRICES))));
   else {
     auto result = static_greedy_repeated(ORIGINAL_MATRICES);
     if (get_score(result) < 999000) {
       if (duration_cast<microseconds>(high_resolution_clock::now() - THE_START_TIME).count() < 1330666)
-        result = chronical_random_walk(static_greedy_with_approximation(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES)));
+        result = chronical_random_walk(static_greedy_with_approximation(smallest_lines_to_zeros(ORIGINAL_MATRICES)));
       else
         result = chronical_random_walk(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES));
     } else {
