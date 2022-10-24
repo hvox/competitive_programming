@@ -515,13 +515,13 @@ int main() {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 37963184
+  // score: 38025181
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() <= 3)
     print_output(chronical_random_walk(static_greedy_repeated(ORIGINAL_MATRICES)));
   else if (ORIGINAL_MATRICES.size() == 5)
-    print_output(chronical_random_walk(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES)));
+    print_output(chronical_random_walk(static_greedy_with_approximation(first_lines_to_zeros(ORIGINAL_MATRICES))));
   else {
     auto result = static_greedy_repeated(ORIGINAL_MATRICES);
     if (get_score(result) < 999000) result = first_lines_and_ones_to_zeros(ORIGINAL_MATRICES);
