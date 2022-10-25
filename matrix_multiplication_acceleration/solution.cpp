@@ -549,7 +549,8 @@ vector<Matrix> smallest_columns_to_zeros(vector<Matrix> matrices) {
   return matrices;
 }
 
-vector<Matrix> greedy_columns_to_zeros(vector<Matrix> matrices) {
+vector<Matrix> greedy_columns_to_zeros() {
+  vector<Matrix> matrices = ORIGINAL_MATRICES;
   Matrix AB = matmul(matrices[0], matrices[1]);
   vector<double> sums;
   vector<int> indexes;
@@ -558,15 +559,18 @@ vector<Matrix> greedy_columns_to_zeros(vector<Matrix> matrices) {
     for (int x = 0; x < N; x++) for (int y = 0; y < N; y++)
       sum += (double) AB[x][i] * matrices[2][i][y] / ORIGINAL_PRODUCT[x][y];
     indexes.push_back(i);
-    sums.push_back(sum);
+    sums.push_back(sum / N / N);
   }
   sort(indexes.begin(), indexes.end(), [&](auto const &i, auto const &j) {
     return sums[i] < sums[j];
   });
-  int columns = N * 4 / 10;
-  for (int i = 0; i < columns; i++)
+  int i = 0;
+  double acc = 1.0;
+  while ((acc -= sums[indexes[i]]) >= 0.6) {
     for (int j = 0; j < N; j++)
       matrices[1][j][indexes[i]] = 0;
+    i++;
+  }
   return matrices;
 }
 
@@ -577,7 +581,7 @@ int main() {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 39370236
+  // score: 39499909
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() == 5)
@@ -586,7 +590,7 @@ int main() {
     auto result = static_greedy_repeated(ORIGINAL_MATRICES);
     auto score = get_score(result);
     if (NUMBER_OF_MATRICES == 3) {
-      auto alternative = static_greedy_with_approximation(greedy_columns_to_zeros(ORIGINAL_MATRICES));
+      auto alternative = static_greedy_with_approximation(greedy_columns_to_zeros());
       auto alt_score = get_score(alternative);
       if (alt_score > score) {
         result = alternative;
