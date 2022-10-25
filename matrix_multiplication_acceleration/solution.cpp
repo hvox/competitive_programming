@@ -574,6 +574,34 @@ vector<Matrix> greedy_columns_to_zeros() {
   return matrices;
 }
 
+vector<Matrix> greedy_columns_to_zeros_multi() {
+  vector<Matrix> matrices = ORIGINAL_MATRICES;
+  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
+  vector<double> sums;
+  vector<int> indexes;
+  for (int m = 1; m < NUMBER_OF_MATRICES - 1; m++) {
+    auto &prefix = prefixes[m], &suffix = suffixes[NUMBER_OF_MATRICES-m-2];
+    for (int i = 0; i < N; i++) {
+      double sum = 0;
+      for (int x = 0; x < N; x++) for (int y = 0; y < N; y++)
+        sum += (double) prefix[x][i] * suffix[i][y] / ORIGINAL_PRODUCT[x][y];
+      indexes.push_back((m - 1) * N + i);
+      sums.push_back(sum / N / N);
+    }
+  }
+  sort(indexes.begin(), indexes.end(), [&](auto const &i, auto const &j) {
+    return sums[i] < sums[j];
+  });
+  int i = 0;
+  double acc = 1.0;
+  while ((acc -= sums[indexes[i]]) >= 0.6) {
+    for (int j = 0; j < N; j++)
+      matrices[1 + indexes[i] / N][j][indexes[i] % N] = 0;
+    i++;
+  }
+  return matrices;
+}
+
 int main() {
   read_input();
   srand(228);
@@ -581,7 +609,7 @@ int main() {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 39499909
+  // score: 39567143
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() == 5)
@@ -591,6 +619,14 @@ int main() {
     auto score = get_score(result);
     if (NUMBER_OF_MATRICES == 3) {
       auto alternative = static_greedy_with_approximation(greedy_columns_to_zeros());
+      auto alt_score = get_score(alternative);
+      if (alt_score > score) {
+        result = alternative;
+        score = alt_score;
+      }
+    }
+    if (NUMBER_OF_MATRICES == 4) {
+      auto alternative = (greedy_columns_to_zeros_multi());
       auto alt_score = get_score(alternative);
       if (alt_score > score) {
         result = alternative;
