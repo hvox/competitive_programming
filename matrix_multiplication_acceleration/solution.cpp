@@ -321,13 +321,13 @@ vector<Matrix> static_greedy_with_approximation() {
     auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
     Matrix &matrix = matrices[i];
     for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
-      double value = matrices[i][x0][y0];
       double delta_acc = 0;
+      double value = matrices[i][x0][y0];
       for (int x = 0; x < N; x++) {
         if (prefix[x][x0] == 0) continue;
-        for (int y = 0; y < N; y++) {
-          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
-        }
+        double value_prefix = value * prefix[x][x0];
+        for (int y = 0; y < N; y++)
+          delta_acc += value_prefix * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
       }
       candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N)});
     }
@@ -353,14 +353,15 @@ vector<Matrix> static_greedy_with_approximation(vector<Matrix> matrices) {
     auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
     Matrix &matrix = matrices[i];
     for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
-      double value = matrices[i][x0][y0];
       double delta_acc = 0;
-      for (int x = 0; x < N; x++) {
-        if (prefix[x][x0] == 0) continue;
-        for (int y = 0; y < N; y++) {
-          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
+      double value = matrices[i][x0][y0];
+      if (value != 0)
+        for (int x = 0; x < N; x++) {
+          if (prefix[x][x0] == 0) continue;
+          double value_prefix = value * prefix[x][x0];
+          for (int y = 0; y < N; y++)
+            delta_acc += value_prefix * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
         }
-      }
       candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N)});
     }
   }
@@ -536,7 +537,7 @@ int main() {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 38808340
+  // score: 38822100
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() == 5)
