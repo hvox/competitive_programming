@@ -529,6 +529,47 @@ vector<Matrix> smallest_lines_to_zeros(vector<Matrix> matrices) {
   return matrices;
 }
 
+vector<Matrix> smallest_columns_to_zeros(vector<Matrix> matrices) {
+  vector<int64_t> sums;
+  vector<int> indexes;
+  for (int i = 0; i < N; i++) {
+    int64_t sum = 0;
+    for (int j = 0; j < N; j++)
+      sum += matrices[1][j][i];
+    indexes.push_back(i);
+    sums.push_back(sum);
+  }
+  sort(indexes.begin(), indexes.end(), [&](auto const &i, auto const &j) {
+    return sums[i] < sums[j];
+  });
+  int columns = N * 4 / 10;
+  for (int i = 0; i < columns; i++)
+    for (int j = 0; j < N; j++)
+      matrices[1][j][indexes[i]] = 0;
+  return matrices;
+}
+
+vector<Matrix> greedy_columns_to_zeros(vector<Matrix> matrices) {
+  Matrix AB = matmul(matrices[0], matrices[1]);
+  vector<double> sums;
+  vector<int> indexes;
+  for (int i = 0; i < N; i++) {
+    double sum = 0;
+    for (int x = 0; x < N; x++) for (int y = 0; y < N; y++)
+      sum += (double) AB[x][i] * matrices[2][i][y] / ORIGINAL_PRODUCT[x][y];
+    indexes.push_back(i);
+    sums.push_back(sum);
+  }
+  sort(indexes.begin(), indexes.end(), [&](auto const &i, auto const &j) {
+    return sums[i] < sums[j];
+  });
+  int columns = N * 4 / 10;
+  for (int i = 0; i < columns; i++)
+    for (int j = 0; j < N; j++)
+      matrices[1][j][indexes[i]] = 0;
+  return matrices;
+}
+
 int main() {
   read_input();
   srand(228);
@@ -536,14 +577,23 @@ int main() {
     print_output(ORIGINAL_MATRICES);
     return 0;
   }
-  // score: 38832373
+  // score: 39370236
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() == 5)
     print_output(chronical_random_walk(static_greedy_with_approximation(smallest_lines_to_zeros(ORIGINAL_MATRICES))));
   else {
     auto result = static_greedy_repeated(ORIGINAL_MATRICES);
-    if (get_score(result) < 999000) {
+    auto score = get_score(result);
+    if (NUMBER_OF_MATRICES == 3) {
+      auto alternative = static_greedy_with_approximation(greedy_columns_to_zeros(ORIGINAL_MATRICES));
+      auto alt_score = get_score(alternative);
+      if (alt_score > score) {
+        result = alternative;
+        score = alt_score;
+      }
+    }
+    if (score < 999000) {
       if (duration_cast<microseconds>(high_resolution_clock::now() - THE_START_TIME).count() < 1330666)
         result = chronical_random_walk(static_greedy_with_approximation(smallest_lines_to_zeros(ORIGINAL_MATRICES)));
       else
