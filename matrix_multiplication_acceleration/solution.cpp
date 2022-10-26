@@ -610,6 +610,7 @@ int main() {
     return 0;
   }
   // score: 39567143
+  // final score: 63022022
   if (NUMBER_OF_MATRICES * N * N <= 12)
     print_output(the_best());
   else if (ORIGINAL_MATRICES.size() == 5)
