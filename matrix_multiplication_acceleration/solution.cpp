@@ -41,25 +41,6 @@ bool is_not_a_real_test() {
   return false;
 }
 
-int64_t determinant(Matrix const &matrix, int size = -1) {
-  if (size == -1) size = N;
-  if (size == 1) return matrix[0][0];
-  if (size == 2) return matrix[0][0] * matrix[1][1] - matrix[1][0] * matrix[0][1];
-  int64_t det = 0;
-  for (int i = 0; i < size; i++) {
-    Matrix submatrix;
-    for (int x = 0, sub_x = 0; x < size; x++) {
-      if (x == i) continue;
-      for (int y = 1; y < size; y++)
-        submatrix[sub_x][y - 1] = matrix[x][y];
-      sub_x++;
-    }
-    int64_t delta = determinant(submatrix, size - 1) * matrix[i][0];
-    det += i % 2 == 0 ? delta : -delta;
-  }
-  return det;
-}
-
 Matrix matmul(Matrix const &A, Matrix const &B) {
   Matrix matrix;
   for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) {
@@ -168,36 +149,8 @@ void print_output(vector<Matrix> const &matrices) {
   } else {
     int score = get_score(matrices);
     double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
-    for (int i = 0; i < ORIGINAL_MATRICES.size(); i++)
-      if (N < 5 and false)
-        cout << "det[" << i << "] = " << determinant(ORIGINAL_MATRICES[i]) << endl;
     cout << "d=" << ORIGINAL_MATRICES.size() << "  score = " << score << "\t " << "acc = " << acc << endl;
   }
-}
-
-vector<Matrix> ones_to_zeros(vector<Matrix> matrices) {
-  int max_x = N < 5 ? matrices.size() - 2 : matrices.size() - 1;
-  for (int x = 0; x <= max_x; x++)
-    for (int y = 0; y < N; y++)
-      for (int z = 0; z < N; z++)
-        if (matrices[x][y][z] == 1)
-          matrices[x][y][z] = 0;
-  return matrices;
-}
-
-vector<Matrix> first_lines_to_zeros(vector<Matrix> matrices) {
-  int lines = N * 4 / 10;
-  for (int i = 0; i < lines; i++)
-    for (int j = 0; j < N; j++)
-      matrices[0][i][j] = 0;
-  return matrices;
-}
-
-vector<Matrix> first_elements_to_zeros(vector<Matrix> matrices) {
-  const int zeros = N * N * 4 / 10;
-  for (int i = 0; i < zeros; i++)
-    matrices[0][i / N][i % N] = 0;
-  return matrices;
 }
 
 vector<Matrix> first_lines_and_ones_to_zeros(vector<Matrix> matrices) {
