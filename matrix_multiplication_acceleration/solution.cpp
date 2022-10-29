@@ -1,3 +1,41 @@
+// Score: 39_567_143
+// Final score: 63_022_700
+
+/*
+
+My solution is a combination of a few simple solutions that are good for different cases.
+
+SOLUTION #1. Target case: D * N * N is very small.
+There are only 2^(D*N*N) ways to put zeros in these matrices.
+So we can check them all and find the optimal one.
+
+SOLUTION #2. Target case: when nothing else works.
+1. Randomly change a few elements into zeros or from zeros into original values.
+   If the changed matrices give better score, keep them as new answer,
+   otherwise discard changes.
+2. Repeat #1 for two seconds
+
+SOLUTION #3. Target case: number of matrices is too big for other solutions
+Fill with zeros 40% of rows of the first matrix.
+This gives us param=0.4 and acc=0.6, which is pretty good result.
+However 0.4 * N is not always an integer number, so we have some extra acc to spend.
+Because of that we can make a few more zeros. So we just make a few ones into zeros.
+
+SOLUTION #4. Target case: number of matrices equals 3.
+I fill x*n columns by zeros in the second matrix. With this approach we have param=1-x,
+but acc depends on the deleted columns.
+So I sort columns by their accuracies and fill first columns with zeros until acc=0.6
+
+SOLUTION #5. Target case: number of matrices equals 4.
+Do the same thing as in solution #4, but not only for the second matrix:
+I also delete columns from third matrix.
+
+SOLUTION #6. Target case: when D*N^4 is not very big
+1. For each matrix element I calculate which will be acc if I make that element zero.
+2. Sort elements by acc and fill first elements with zeros untill acc=0.6
+*/
+
+// include everything, that I will be using
 #include <set>
 #include <tuple>
 #include <array>
@@ -9,8 +47,6 @@
 using namespace std;
 using namespace std::chrono;
 
-#define SKIP_FIRST_TESTS (false)
-
 #if _WIN32
 #include <io.h>
 #define ISATTY _isatty
@@ -20,27 +56,22 @@ using namespace std::chrono;
 #define ISATTY isatty
 #define FILENO fileno
 #endif
-#define loop while (true)
 #define sqr(x) ((x)*(x))
 bool output_is_tty() { return ISATTY(FILENO(stdout)); }
 
+// Matrices are represented by 2-d arrays of integers
 typedef array<array<int64_t, 100>, 100> Matrix;
-int N, ORIGINAL_NUMBER_OF_MULTIPLICATIONS, NUMBER_OF_MATRICES;
+
+// A few global variables, that are used everywhere
+int N; // size of matrix
+int ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
+int NUMBER_OF_MATRICES;
 vector<Matrix> ORIGINAL_MATRICES;
-Matrix ORIGINAL_PRODUCT, ONES_MATRIX;
-system_clock::time_point THE_START_TIME;
+Matrix ORIGINAL_PRODUCT;
+Matrix ONES_MATRIX; // Matrix with ones on the main diagonal
+system_clock::time_point THE_START_TIME; // Time of start of the program
 
-bool is_not_a_real_test() {
-  int d = ORIGINAL_MATRICES.size();
-  int x = ORIGINAL_MATRICES[0][0][0], y = ORIGINAL_MATRICES[0][0][1];
-  if (d == 3 && N == 2 && x == 3 && y == 4) return true;
-  if (d == 5 && N == 7 && x == 5 && y == 5) return true;
-  if (d == 2 && N == 100 && x == 2 && y == 5) return true;
-  if (d == 5 && N == 99 && x == 4 && y == 4) return true;
-  if (d == 4 && N == 97 && x == 4 && y == 4) return true;
-  return false;
-}
-
+// Matrix multiplication of two matrices
 Matrix matmul(Matrix const &A, Matrix const &B) {
   Matrix matrix;
   for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) {
@@ -52,6 +83,7 @@ Matrix matmul(Matrix const &A, Matrix const &B) {
   return matrix;
 }
 
+// Matrix multiplication of a few matrices
 Matrix matmul(vector<Matrix> const &matrices) {
   Matrix matrix = matrices[0];
   for (int i = 1; i < matrices.size(); i++)
@@ -59,6 +91,7 @@ Matrix matmul(vector<Matrix> const &matrices) {
   return matrix;
 }
 
+// Matrix multiplication of two matrices with counting of element multiplications
 pair<Matrix, int> matmulcnt(Matrix const &A, Matrix const &B) {
   Matrix matrix;
   int products = 0;
@@ -73,6 +106,7 @@ pair<Matrix, int> matmulcnt(Matrix const &A, Matrix const &B) {
   return {matrix, products};
 }
 
+// Matrix multiplication with counting of element multiplications
 pair<Matrix, int> matmulcnt(vector<Matrix> const &matrices) {
   Matrix matrix = matrices[0];
   int total_number_of_operations = 0;
@@ -84,6 +118,7 @@ pair<Matrix, int> matmulcnt(vector<Matrix> const &matrices) {
   return {matrix, total_number_of_operations};
 }
 
+// Prefix products of matrices
 vector<Matrix> get_prefixes(vector<Matrix> const &matrices) {
   vector<Matrix> prefixes;
   prefixes.push_back(matrices[0]);
@@ -92,6 +127,7 @@ vector<Matrix> get_prefixes(vector<Matrix> const &matrices) {
   return prefixes;
 }
 
+// Prefix products of matrices
 vector<Matrix> get_suffixes(vector<Matrix> const &matrices) {
   vector<Matrix> suffixes;
   suffixes.push_back(*matrices.rbegin());
@@ -100,6 +136,9 @@ vector<Matrix> get_suffixes(vector<Matrix> const &matrices) {
   return suffixes;
 }
 
+// This function calculates the acc value for defined matrices:
+// A - new matrix, score for which is currently being calculated
+// B - the original product of matrices
 double sum_div(Matrix const &A, Matrix const &B) {
   double acc = 0;
   for (int i = 0; i < N; i++) for (int j = 0; j < N; j++)
@@ -107,17 +146,20 @@ double sum_div(Matrix const &A, Matrix const &B) {
   return acc / (N * N);
 }
 
+// Score calculation for defined matrices according to formula from task statement
 int get_score(vector<Matrix> const &matrices) {
   auto [matrix, products] = matmulcnt(matrices);
   double acc = sum_div(matrix, ORIGINAL_PRODUCT);
-  // cout << "acc = " << acc << endl;
   if (acc < 0.6) return 0;
   double param = ((double)products) / ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
   return 5e6 * max(0.0, (acc - 1) / 2 + 1 - param);
 }
 
+// Read input and initialize a few global variables
 void read_input() {
+  // Save current time
   THE_START_TIME = high_resolution_clock::now();
+  // Read input
   int d;
   cin >> d >> N;
   NUMBER_OF_MATRICES = d;
@@ -127,16 +169,16 @@ void read_input() {
     for (int j = 0; j < N; j++)
       for (int k = 0; k < N; k++)
         cin >> matrices[i][j][k];
+  // Initialize a few global variables
   auto [product, operations] = matmulcnt(matrices);
   ORIGINAL_PRODUCT = product;
-  // cout << "ORIGINAL_PRODUCT:"; for (int i = 0; i < N; i++) {cout << " [" << product[i][0]; for(int j = 1; j < N; j++) cout << " " << product[i][j]; cout << "]";} cout << endl;
   ORIGINAL_MATRICES = matrices;
   ORIGINAL_NUMBER_OF_MULTIPLICATIONS = operations;
   for (int i = 0; i < N; i++)
     ONES_MATRIX[i][i] = 1;
-
 }
 
+// Output the output
 void print_output(vector<Matrix> const &matrices) {
   if (!output_is_tty()) {
     for (auto matrix: matrices)
@@ -153,297 +195,17 @@ void print_output(vector<Matrix> const &matrices) {
   }
 }
 
-vector<Matrix> first_lines_and_ones_to_zeros(vector<Matrix> matrices) {
-  int lines = N * 4 / 10;
-  for (int i = 0; i < lines; i++)
-    for (int j = 0; j < N; j++)
-      matrices[0][i][j] = 0;
-  const int zeros = N * N * 4 / 10;
-  for (int j = 0; j < zeros - lines * N; j++)
-    if (matrices[0][lines][j] == 1)
-      matrices[0][lines][j] = 0;
-  return matrices;
-}
-
-vector<Matrix> greedy_with_approximation(vector<Matrix> matrices) {
-  const int matrices_size = matrices.size();
-  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
-  // cout << "-- prefixes --" << endl; for (int i = 0; i < prefixes.size(); i++) {for (int j = 0; j < N; j++) { for (int k = 0; k < N; k++) cout << prefixes[i][j][k] << " "; cout << endl;} cout << endl;}
-  // cout << "-- suffixes --" << endl; for (int i = 0; i < suffixes.size(); i++) {for (int j = 0; j < N; j++) { for (int k = 0; k < N; k++) cout << suffixes[i][j][k] << " "; cout << endl;} cout << endl;}
-  vector<tuple<int, double, int>> candidates;
-  for (int i = 0; i < matrices_size; i++) {
-    auto &prefix = i > 0 ? prefixes[i - 1] : ONES_MATRIX;
-    auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
-    // cout << "\ti = " << i << endl;
-    Matrix &matrix = matrices[i];
-    // cout << "prefix:"; for (int i = 0; i < N; i++) {cout << " [" << prefix[i][0]; for(int j = 1; j < N; j++) cout << " " << prefix[i][j]; cout << "]";} cout << endl;
-    // cout << "matrix:"; for (int i = 0; i < N; i++) {cout << " [" << matrix[i][0]; for(int j = 1; j < N; j++) cout << " " << matrix[i][j]; cout << "]";} cout << endl;
-    // cout << "suffix:"; for (int i = 0; i < N; i++) {cout << " [" << suffix[i][0]; for(int j = 1; j < N; j++) cout << " " << suffix[i][j]; cout << "]";} cout << endl;
-    for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
-      double value = matrices[i][x0][y0];
-      // if (value == 0) continue;
-      double delta_acc = 0;
-      int delta_multiplications = 0;
-      for (int x = 0; x < N; x++) {
-        if (prefix[x][x0] == 0) continue;
-        delta_multiplications += 1; // TODO: have better counting of producs
-        for (int y = 0; y < N; y++) {
-          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
-        }
-      }
-      candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N), delta_multiplications});
-    }
-  }
-  sort(candidates.begin(), candidates.end(), [&](auto const &u, auto const &v) {
-    return get<2>(u) / get<1>(u) > get<2>(v) / get<1>(v);
-  });
-  // cout << "candidates:" << endl; for (auto [i, acc, mults] : candidates) cout << "\ti=" << i << " acc=" << acc << " mults=" << mults << " -> " << mults / acc << endl;
-  double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
-  for (int i = 0; i < matrices_size * N * N; i++) {
-    auto [j, delta_acc, delta_mults] = candidates[i];
-    // cout << "iteration: " << i << " -> " << j << " " << delta_acc << " " << delta_mults << endl;
-    if (acc - delta_acc < 0.6 || delta_mults * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS)
-      break;
-    acc -= delta_acc;
-    matrices[j / N / N][(j / N) % N][j % N] = 0;
-  }
-  return matrices;
-}
-
-vector<Matrix> greedy2(vector<Matrix> matrices) {
-  if (matrices.size() != 2) return matrices;
-  Matrix &A = matrices[0], &B = matrices[1];
-  auto cmp = [](tuple<int, double, int> const &u, tuple<int, double, int> const &v) {
-    if (N > 5)
-      return get<1>(u) < get<1>(v);
-    return get<2>(u) * 2 - get<1>(u) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS > get<2>(v) * 2 - get<1>(v) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
-  };
-  set<tuple<int, double, int>, decltype(cmp)> candidates;
-  vector<tuple<double, int>> candidates_flat(N*N*2);
-  for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) {
-    double a_acc = 0; for (int k = 0; k < N; k++) a_acc += ((double) B[j][k]) / ORIGINAL_PRODUCT[i][k];
-    double b_acc = 0; for (int k = 0; k < N; k++) b_acc += ((double) A[k][i]) / ORIGINAL_PRODUCT[k][j];
-    candidates.insert({i * N + j, a_acc * A[i][j] / N / N, N});
-    candidates_flat[i*N+j] = {a_acc * A[i][j] / N / N, N};
-    candidates.insert({N*N + i * N + j, b_acc * B[i][j] / N / N, N});
-    candidates_flat[N*N+i*N+j] = {b_acc * B[i][j] / N / N, N};
-  }
-  double acc = 1.0;
-  while (not candidates.empty()) {
-    // cout << "cands:\n"; for (auto [i, acc, zeros] : candidates) cout << "AB"[i / N / N] << " " << i / N % N << " " << i % N << " -> " << acc << " " << zeros << "\n";
-    auto candidate_iterator = candidates.begin();
-    auto [index, delta_acc, delta_ops] = *candidate_iterator;
-    candidates.erase(candidate_iterator);
-    if (delta_ops * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS) continue;
-    if (acc - delta_acc < 0.6) continue;
-    int d = index / N / N, i = index / N % N, j = index % N;
-    // cout << "delete " << d << " " << i << " " << j << endl;
-    int value = matrices[d][i][j];
-    matrices[d][i][j] = 0;
-    acc -= delta_acc;
-    if (d == 0) {
-      for (int k = 0; k < N; k++) { // B[j][k]
-        int b_index = N*N + j*N + k;
-        auto[b_acc, b_ops] = candidates_flat[b_index];
-        if (candidates.erase({b_index, b_acc, b_ops}) == 0) continue;
-        b_acc -= (double) value * B[j][k] / ORIGINAL_PRODUCT[i][k] / N / N; b_ops--;
-        candidates_flat[b_index] = {b_acc, b_ops};
-        candidates.insert({b_index, b_acc, b_ops});
-      }
-    } else {
-      for (int k = 0; k < N; k++) { // A[k][i]
-        int a_index = k*N + i;
-        auto[a_acc, a_ops] = candidates_flat[a_index];
-        if (candidates.erase({a_index, a_acc, a_ops}) == 0) continue;
-        a_acc -= (double) value * A[k][i] / ORIGINAL_PRODUCT[k][j] / N / N; a_ops--;
-        candidates_flat[a_index] = {a_acc, a_ops};
-        candidates.insert({a_index, a_acc, a_ops});
-      }
-    }
-  }
-  return matrices;
-}
-
-vector<Matrix> static_greedy_with_approximation() {
-  vector<Matrix> matrices = ORIGINAL_MATRICES;
-  const int matrices_size = matrices.size();
-  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
-  vector<tuple<int, double>> candidates;
-  for (int i = 0; i < matrices_size; i++) {
-    auto &prefix = i > 0 ? prefixes[i - 1] : ONES_MATRIX;
-    auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
-    Matrix &matrix = matrices[i];
-    for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
-      double value = matrices[i][x0][y0];
-      double delta_acc = 0;
-      for (int x = 0; x < N; x++) {
-        if (prefix[x][x0] == 0) continue;
-        for (int y = 0; y < N; y++) {
-          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
-        }
-      }
-      candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N)});
-    }
-  }
-  sort(candidates.begin(), candidates.end(), [&](auto const &u, auto const &v) { return get<1>(u) < get<1>(v); });
-  double acc = 1;
-  for (int i = 0; i < matrices_size * N * N; i++) {
-    auto [j, delta_acc] = candidates[i];
-    if (acc - delta_acc < 0.6 || N * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS)
-      break; // continue?
-    acc -= delta_acc;
-    matrices[j / N / N][(j / N) % N][j % N] = 0;
-  }
-  return matrices;
-}
-
-vector<Matrix> static_greedy_with_approximation(vector<Matrix> matrices) {
-  const int matrices_size = matrices.size();
-  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
-  vector<tuple<int, double>> candidates;
-  for (int i = 0; i < matrices_size; i++) {
-    auto &prefix = i > 0 ? prefixes[i - 1] : ONES_MATRIX;
-    auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
-    Matrix &matrix = matrices[i];
-    for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
-      double value = matrices[i][x0][y0];
-      double delta_acc = 0;
-      for (int x = 0; x < N; x++) {
-        if (prefix[x][x0] == 0) continue;
-        for (int y = 0; y < N; y++) {
-          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
-        }
-      }
-      candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N)});
-    }
-  }
-  sort(candidates.begin(), candidates.end(), [&](auto const &u, auto const &v) { return get<1>(u) < get<1>(v); });
-  double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
-  for (int i = 0; i < matrices_size * N * N; i++) {
-    auto [j, delta_acc] = candidates[i];
-    if (acc - delta_acc < 0.6 || N * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS)
-      break; // continue?
-    acc -= delta_acc;
-    matrices[j / N / N][(j / N) % N][j % N] = 0;
-  }
-  return matrices;
-}
-
-vector<Matrix> static_greedy_repeated(vector<Matrix> matrices) {
-  matrices = static_greedy_with_approximation();
-  return greedy_with_approximation(matrices);
-}
-
-vector<Matrix> static_greedy2(vector<Matrix> matrices) {
-  if (matrices.size() != 2) return matrices;
-  Matrix &A = matrices[0], &B = matrices[1];
-  auto cmp = [](tuple<int, double, int> const &u, tuple<int, double, int> const &v) {
-    if (N > 5)
-      return get<1>(u) < get<1>(v);
-    return get<2>(u) * 2 - get<1>(u) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS > get<2>(v) * 2 - get<1>(v) * ORIGINAL_NUMBER_OF_MULTIPLICATIONS;
-  };
-  set<tuple<int, double, int>, decltype(cmp)> candidates;
-  vector<tuple<double, int>> candidates_flat(N*N*2);
-  for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) {
-    double a_acc = 0; for (int k = 0; k < N; k++) a_acc += ((double) B[j][k]) / ORIGINAL_PRODUCT[i][k];
-    double b_acc = 0; for (int k = 0; k < N; k++) b_acc += ((double) A[k][i]) / ORIGINAL_PRODUCT[k][j];
-    candidates.insert({i * N + j, a_acc * A[i][j] / N / N, N});
-    candidates_flat[i*N+j] = {a_acc * A[i][j] / N / N, N};
-    candidates.insert({N*N + i * N + j, b_acc * B[i][j] / N / N, N});
-    candidates_flat[N*N+i*N+j] = {b_acc * B[i][j] / N / N, N};
-  }
-  double acc = 1.0;
-  while (not candidates.empty()) {
-    auto candidate_iterator = candidates.begin();
-    auto [index, _, __] = *candidate_iterator;
-    auto [delta_acc, delta_ops] = candidates_flat[index];
-    candidates.erase(candidate_iterator);
-    if (delta_ops * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS) continue;
-    if (acc - delta_acc < 0.6) continue;
-    int d = index / N / N, i = index / N % N, j = index % N;
-    int value = matrices[d][i][j];
-    matrices[d][i][j] = 0;
-    acc -= delta_acc;
-    if (d == 0) {
-      for (int k = 0; k < N; k++) { // B[j][k]
-        int b_index = N*N + j*N + k;
-        auto[b_acc, b_ops] = candidates_flat[b_index];
-        b_acc -= (double) value * B[j][k] / ORIGINAL_PRODUCT[i][k] / N / N; b_ops--;
-        candidates_flat[b_index] = {b_acc, b_ops};
-      }
-    } else {
-      for (int k = 0; k < N; k++) { // A[k][i]
-        int a_index = k*N + i;
-        auto[a_acc, a_ops] = candidates_flat[a_index];
-        a_acc -= (double) value * A[k][i] / ORIGINAL_PRODUCT[k][j] / N / N; a_ops--;
-        candidates_flat[a_index] = {a_acc, a_ops};
-      }
-    }
-  }
-  return matrices;
-}
-
-vector<Matrix> random_guesses(vector<Matrix> original_matrices) {
-  int guesses = 10000;
-  vector<Matrix> best_matrices = original_matrices;
-  double best_score = get_score(original_matrices);
-  while (guesses--) {
-    vector<Matrix> matrices = rand() % 2 == 0 ? original_matrices : best_matrices;
-    for (int i = 0; i < matrices.size(); i++)
-      for (int x = 0; x < N; x++)
-        for (int y = 0; y < N; y++)
-          if (rand() % (sqr(matrices[i][x][y])+1) == 0)
-            matrices[i][x][y] = 0;
-    double score = get_score(matrices);
-    if (score > best_score) {
-      best_matrices = matrices;
-      best_score = score;
-    }
-  }
-  return best_matrices;
-}
-
-vector<Matrix> random_walk(vector<Matrix> matrices) {
-  int iterations = 160000000 / N / N / N / matrices.size();
-  double current_score = get_score(matrices);
-  while (iterations--) {
-    vector<Matrix> candidate = matrices;
-    for (int i = 0; i < matrices.size(); i++) for (int x = 0; x < N; x++) for (int y = 0; y < N; y++) {
-      if (rand() % (N*N) == 0) {
-        candidate[i][x][y] = candidate[i][x][y] != 0 ? 0 : ORIGINAL_MATRICES[i][x][y];
-      }
-    }
-    double score = get_score(candidate);
-    if (score > current_score) {
-      matrices = candidate;
-      current_score = score;
-    }
-  }
-  return matrices;
-}
-
-vector<Matrix> chronical_random_walk(vector<Matrix> matrices) {
-  double current_score = get_score(matrices);
-	while (duration_cast<microseconds>(high_resolution_clock::now() - THE_START_TIME).count() < 1983666) {
-    vector<Matrix> candidate = matrices;
-    for (int i = 0; i < 1; i++) candidate[rand()%matrices.size()][rand()%N][rand()%N] = 0;
-    for (int j = 0; j < 2; j++) { int i = rand() % matrices.size(), x = rand()%N, y = rand()%N; candidate[i][x][y] = ORIGINAL_MATRICES[i][x][y]; }
-    double score = get_score(candidate);
-    if (score > current_score) {
-      matrices = candidate;
-      current_score = score;
-    }
-  }
-  return matrices;
-}
-
+/*
+SOLUTION #1. Target case: D * N * N is very small.
+There are only 2^(D*N*N) ways to put zeros in these matrices.
+So we can check them all and find the optimal one.
+*/
 void mask_to_matrix(vector<Matrix> &matrices, int mask) {
   const int number_of_elements = N * N * NUMBER_OF_MATRICES;
   for (int i = 0; i < number_of_elements; i++)
     matrices[i / N / N][i / N % N][i % N] =
       ((mask >> i) & 1) * ORIGINAL_MATRICES[i / N / N][i / N % N][i % N];
 }
-
 vector<Matrix> the_best() {
   vector<Matrix> matrices(NUMBER_OF_MATRICES);
   int number_of_masks = 1 << NUMBER_OF_MATRICES * N * N;
@@ -461,7 +223,54 @@ vector<Matrix> the_best() {
   return matrices;
 }
 
-vector<Matrix> smallest_lines_to_zeros(vector<Matrix> matrices) {
+/*
+SOLUTION #2. Target case: when nothing else works.
+1. Randomly change a few elements into zeros or from zeros into original values.
+   If the changed matrices give better score, keep them as new answer,
+   otherwise discard changes.
+2. Repeat #1 for two seconds
+*/
+vector<Matrix> chronical_random_walk(vector<Matrix> matrices) {
+  double current_score = get_score(matrices);
+	while (duration_cast<microseconds>(high_resolution_clock::now() - THE_START_TIME).count() < 1983666) {
+    vector<Matrix> candidate = matrices;
+    for (int i = 0; i < 1; i++) candidate[rand()%matrices.size()][rand()%N][rand()%N] = 0;
+    for (int j = 0; j < 2; j++) { int i = rand() % matrices.size(), x = rand()%N, y = rand()%N; candidate[i][x][y] = ORIGINAL_MATRICES[i][x][y]; }
+    double score = get_score(candidate);
+    if (score > current_score) {
+      matrices = candidate;
+      current_score = score;
+    }
+  }
+  return matrices;
+}
+
+/*
+SOLUTION #3. Target case: number of matrices is too big for other solutions
+Fill with zeros 40% of rows of the first matrix.
+This gives us param=0.4 and acc=0.6, which is pretty good result.
+However 0.4 * N is not always an integer number, so we have some extra acc to spend.
+Because of that we can make a few more zeros. So we just make a few ones into zeros.
+*/
+vector<Matrix> first_lines_and_ones_to_zeros(vector<Matrix> matrices) {
+  int lines = N * 4 / 10;
+  for (int i = 0; i < lines; i++)
+    for (int j = 0; j < N; j++)
+      matrices[0][i][j] = 0;
+  const int zeros = N * N * 4 / 10;
+  for (int j = 0; j < zeros - lines * N; j++)
+    if (matrices[0][lines][j] == 1)
+      matrices[0][lines][j] = 0;
+  return matrices;
+}
+
+/*
+ALTERNATIVE SOLUTION #3
+This solution is the same as previous one, but rows with biggest sums in
+the matrix product are deleted first. And ones are not replaced by zeros.
+This modifications *slightly* improve result of postprocessing...
+*/
+vector<Matrix> biggest_lines_to_zeros(vector<Matrix> matrices) {
   Matrix product = matmul(matrices);
   vector<int64_t> sums;
   vector<int> indexes;
@@ -482,26 +291,12 @@ vector<Matrix> smallest_lines_to_zeros(vector<Matrix> matrices) {
   return matrices;
 }
 
-vector<Matrix> smallest_columns_to_zeros(vector<Matrix> matrices) {
-  vector<int64_t> sums;
-  vector<int> indexes;
-  for (int i = 0; i < N; i++) {
-    int64_t sum = 0;
-    for (int j = 0; j < N; j++)
-      sum += matrices[1][j][i];
-    indexes.push_back(i);
-    sums.push_back(sum);
-  }
-  sort(indexes.begin(), indexes.end(), [&](auto const &i, auto const &j) {
-    return sums[i] < sums[j];
-  });
-  int columns = N * 4 / 10;
-  for (int i = 0; i < columns; i++)
-    for (int j = 0; j < N; j++)
-      matrices[1][j][indexes[i]] = 0;
-  return matrices;
-}
-
+/*
+SOLUTION #4. Target case: number of matrices equals 3.
+I fill x*n columns by zeros in the second matrix. With this approach we have param=1-x,
+but acc depends on the deleted columns.
+So I sort columns by their accuracies and fill first columns with zeros until acc=0.6
+*/
 vector<Matrix> greedy_columns_to_zeros() {
   vector<Matrix> matrices = ORIGINAL_MATRICES;
   Matrix AB = matmul(matrices[0], matrices[1]);
@@ -527,6 +322,11 @@ vector<Matrix> greedy_columns_to_zeros() {
   return matrices;
 }
 
+/*
+SOLUTION #5. Target case: number of matrices equals 4.
+Do the same thing as in solution #4, but not only for the second matrix:
+I also delete columns from third matrix.
+*/
 vector<Matrix> greedy_columns_to_zeros_multi() {
   vector<Matrix> matrices = ORIGINAL_MATRICES;
   auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
@@ -555,23 +355,108 @@ vector<Matrix> greedy_columns_to_zeros_multi() {
   return matrices;
 }
 
+/*
+SOLUTION #6. Target case: when D*N^4 is not too big
+1. For each matrix element I calculate which will be acc if I make that element zero.
+2. Sort elements by acc and fill first elements with zeros untill acc=0.6
+*/
+vector<Matrix> static_greedy_with_approximation(vector<Matrix> matrices=ORIGINAL_MATRICES) {
+  const int matrices_size = matrices.size();
+  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
+  vector<tuple<int, double>> candidates;
+  for (int i = 0; i < matrices_size; i++) {
+    auto &prefix = i > 0 ? prefixes[i - 1] : ONES_MATRIX;
+    auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
+    Matrix &matrix = matrices[i];
+    for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
+      double value = matrices[i][x0][y0];
+      double delta_acc = 0;
+      for (int x = 0; x < N; x++) {
+        if (prefix[x][x0] == 0) continue;
+        for (int y = 0; y < N; y++) {
+          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
+        }
+      }
+      candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N)});
+    }
+  }
+  sort(candidates.begin(), candidates.end(), [&](auto const &u, auto const &v) { return get<1>(u) < get<1>(v); });
+  double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
+  for (int i = 0; i < matrices_size * N * N; i++) {
+    auto [j, delta_acc] = candidates[i];
+    if (acc - delta_acc < 0.6 || N * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS)
+      break;
+    acc -= delta_acc;
+    matrices[j / N / N][(j / N) % N][j % N] = 0;
+  }
+  return matrices;
+}
+
+// This is the same function, the only differense is sorting.
+// In the previous function sorting was done by acc, but here it is done by 
+// approximate number of saved multiplication divided by acc.
+vector<Matrix> greedy_with_approximation(vector<Matrix> matrices) {
+  const int matrices_size = matrices.size();
+  auto prefixes = get_prefixes(matrices), suffixes = get_suffixes(matrices);
+  vector<tuple<int, double, int>> candidates;
+  for (int i = 0; i < matrices_size; i++) {
+    auto &prefix = i > 0 ? prefixes[i - 1] : ONES_MATRIX;
+    auto &suffix = i < matrices_size-1 ? suffixes[matrices_size-i-2] : ONES_MATRIX;
+    Matrix &matrix = matrices[i];
+    for (int x0 = 0; x0 < N; x0++) for (int y0 = 0; y0 < N; y0++) {
+      double value = matrices[i][x0][y0];
+      double delta_acc = 0;
+      int delta_multiplications = 0;
+      for (int x = 0; x < N; x++) {
+        if (prefix[x][x0] == 0) continue;
+        delta_multiplications += 1; // TODO: improve counting of multiplications
+        for (int y = 0; y < N; y++) {
+          delta_acc += value * prefix[x][x0] * suffix[y0][y] / ORIGINAL_PRODUCT[x][y];
+        }
+      }
+      candidates.push_back({i*N*N+x0*N+y0, delta_acc / (N*N), delta_multiplications});
+    }
+  }
+  sort(candidates.begin(), candidates.end(), [&](auto const &u, auto const &v) {
+    return get<2>(u) / get<1>(u) > get<2>(v) / get<1>(v);
+  });
+  double acc = sum_div(matmul(matrices), ORIGINAL_PRODUCT);
+  for (int i = 0; i < matrices_size * N * N; i++) {
+    auto [j, delta_acc, delta_mults] = candidates[i];
+    if (acc - delta_acc < 0.6 || delta_mults * 2 < delta_acc * ORIGINAL_NUMBER_OF_MULTIPLICATIONS)
+      break;
+    acc -= delta_acc;
+    matrices[j / N / N][(j / N) % N][j % N] = 0;
+  }
+  return matrices;
+}
+
+// In solution #6 I don't update acc values of matrix elements,
+// therefore the value of the acc is overrated.
+// In order to fight this problem I apply the algorithm twise.
+vector<Matrix> static_greedy_repeated(vector<Matrix> matrices) {
+  matrices = static_greedy_with_approximation();
+  return greedy_with_approximation(matrices);
+}
+
 int main() {
   read_input();
-  srand(228);
-  if (is_not_a_real_test() and SKIP_FIRST_TESTS) {
-    print_output(ORIGINAL_MATRICES);
-    return 0;
-  }
-  // score: 39567143
-  // final score: 63022022
+  srand(228); // This is absolutly random number
   if (NUMBER_OF_MATRICES * N * N <= 12)
-    print_output(the_best());
+    print_output(the_best()); // SOLUTION #1
   else if (ORIGINAL_MATRICES.size() == 5)
-    print_output(chronical_random_walk(static_greedy_with_approximation(smallest_lines_to_zeros(ORIGINAL_MATRICES))));
+    // This is composition of sequention application of following solutions:
+    // SOLUTION #3
+    // SOLUTION #6
+    // SOLUTION #2
+    print_output(chronical_random_walk(static_greedy_with_approximation(biggest_lines_to_zeros(ORIGINAL_MATRICES))));
   else {
+    // SOLUTION #6 repeated
     auto result = static_greedy_repeated(ORIGINAL_MATRICES);
     auto score = get_score(result);
+    // try alternative solutions
     if (NUMBER_OF_MATRICES == 3) {
+      // composition of SOLUTION #4 and SOLUTION #6
       auto alternative = static_greedy_with_approximation(greedy_columns_to_zeros());
       auto alt_score = get_score(alternative);
       if (alt_score > score) {
@@ -580,6 +465,7 @@ int main() {
       }
     }
     if (NUMBER_OF_MATRICES == 4) {
+      // SOLUTION #5
       auto alternative = (greedy_columns_to_zeros_multi());
       auto alt_score = get_score(alternative);
       if (alt_score > score) {
@@ -587,14 +473,21 @@ int main() {
         score = alt_score;
       }
     }
+    // If current answer gives too small score, try another solutions
     if (score < 999000) {
       if (duration_cast<microseconds>(high_resolution_clock::now() - THE_START_TIME).count() < 1330666)
-        result = chronical_random_walk(static_greedy_with_approximation(smallest_lines_to_zeros(ORIGINAL_MATRICES)));
+        // If there is not much time left, use composition of the following solutions:
+        // SOLUTION #3, SOLUTION #6, SOLUTION #2
+        result = chronical_random_walk(static_greedy_with_approximation(biggest_lines_to_zeros(ORIGINAL_MATRICES)));
       else
+        // Otherwise use composition of the following solutions:
+        // SOLUTION #3, SOLUTION #2
         result = chronical_random_walk(first_lines_and_ones_to_zeros(ORIGINAL_MATRICES));
     } else {
+      // If current score is good enough, improve it by SOLUTION #2 until time limit is almost exceded
       result = chronical_random_walk(result);
     }
+    // Output
     print_output(result);
   }
   return 0;
